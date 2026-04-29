@@ -1,0 +1,62 @@
+[
+  {
+    "question": "What does ECI stand for?",
+    "options": ["Election Commission of India", "Electoral Council of India", "Elections Committee of India", "Electoral Court of India"],
+    "correctIndex": 0,
+    "explanation": "The Election Commission of India (ECI) is the autonomous constitutional authority responsible for administering election processes in India."
+  },
+  {
+    "question": "What is NOTA?",
+    "options": ["New Order Tracking Application", "None Of The Above", "National Organization for Transparency in Affairs", "Notice Of Transfer Application"],
+    "correctIndex": 1,
+    "explanation": "NOTA (None Of The Above) is a ballot option that allows voters to officially register their rejection of all contesting candidates."
+  },
+  {
+    "question": "What is the minimum age to vote in India?",
+    "options": ["16 years", "18 years", "21 years", "25 years"],
+    "correctIndex": 1,
+    "explanation": "The 61st Amendment Act (1988) lowered the voting age for elections to the Lok Sabha and to the Legislative Assemblies of States from 21 years to 18 years."
+  },
+  {
+    "question": "Who appoints the Chief Election Commissioner of India?",
+    "options": ["Prime Minister", "Chief Justice of India", "President of India", "Parliament"],
+    "correctIndex": 2,
+    "explanation": "The President of India appoints the Chief Election Commissioner and Election Commissioners based on the recommendation of a selection committee."
+  },
+  {
+    "question": "Which machine is used to record votes electronically in India?",
+    "options": ["EVM", "VVPAT", "ATM", "POS"],
+    "correctIndex": 0,
+    "explanation": "Electronic Voting Machines (EVMs) are used in Indian General and State Elections to record votes securely and efficiently."
+  },
+  {
+    "question": "What is the purpose of a VVPAT machine?",
+    "options": ["To count votes automatically", "To print a paper slip for the voter to verify their vote", "To register new voters", "To scan identity cards"],
+    "correctIndex": 1,
+    "explanation": "Voter Verifiable Paper Audit Trail (VVPAT) provides a paper slip that allows the voter to verify that their vote was cast as intended."
+  },
+  {
+    "question": "When does the Model Code of Conduct (MCC) come into effect?",
+    "options": ["One month before voting day", "Immediately after the election schedule is announced by the ECI", "On the day of voting", "After nominations are closed"],
+    "correctIndex": 1,
+    "explanation": "The MCC comes into force immediately upon the announcement of the election schedule by the Election Commission of India."
+  },
+  {
+    "question": "What is a 'Constituency'?",
+    "options": ["A political party's headquarters", "An electoral district that elects one representative", "The constitution document", "A group of election officials"],
+    "correctIndex": 1,
+    "explanation": "A constituency is a specific geographic area that elects a single representative to a legislative body like the Lok Sabha or State Assembly."
+  },
+  {
+    "question": "What is the term length for a member of the Lok Sabha?",
+    "options": ["4 years", "5 years", "6 years", "Lifelong"],
+    "correctIndex": 1,
+    "explanation": "Members of the Lok Sabha (the lower house of Parliament) are elected for a term of 5 years, unless the house is dissolved earlier."
+  },
+  {
+    "question": "If an elected representative resigns or dies, what type of election is held to fill the vacancy?",
+    "options": ["General Election", "Mid-term Election", "By-election", "Re-poll"],
+    "correctIndex": 2,
+    "explanation": "A by-election (or bypoll) is held to fill a political office that has become vacant between general elections."
+  }
+]

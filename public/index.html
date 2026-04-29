@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DemocraSee | Election Process Assistant</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+</head>
+<body>
+    <!-- Language Switcher -->
+    <div class="lang-switcher">
+        <select id="language-select" aria-label="Select Language">
+            <option value="en">English (EN)</option>
+            <option value="hi">हिंदी (HI)</option>
+            <option value="ta">தமிழ் (TA)</option>
+            <option value="bn">বাংলা (BN)</option>
+        </select>
+    </div>
+    <!-- Onboarding / API Key & Region Selection Modal -->
+    <div id="onboarding-overlay" class="overlay active">
+        <div class="modal">
+            <h1>Welcome to DemocraSee <i class="fa-solid fa-check-to-slot text-primary"></i></h1>
+            <p>Your interactive guide to understanding the election process.</p>
+            
+            <form id="onboarding-form">
+                <div class="input-group">
+                    <label for="gemini-key">Gemini API Key</label>
+                    <input type="password" id="gemini-key" required placeholder="Enter your API Key..." aria-label="Gemini API Key">
+                    <small>We need this to power the AI assistant. It's only stored locally in your browser.</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="user-region">Your State / Union Territory</label>
+                    <select id="user-region" required aria-label="State or Union Territory" style="width: 100%; padding: 0.875rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-md); font-family: inherit; font-size: 1rem; transition: var(--transition);">
+                        <option value="" disabled selected>Select your state...</option>
+                        <option value="Andhra Pradesh">Andhra Pradesh</option>
+                        <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                        <option value="Assam">Assam</option>
+                        <option value="Bihar">Bihar</option>
+                        <option value="Chhattisgarh">Chhattisgarh</option>
+                        <option value="Goa">Goa</option>
+                        <option value="Gujarat">Gujarat</option>
+                        <option value="Haryana">Haryana</option>
+                        <option value="Himachal Pradesh">Himachal Pradesh</option>
+                        <option value="Jharkhand">Jharkhand</option>
+                        <option value="Karnataka">Karnataka</option>
+                        <option value="Kerala">Kerala</option>
+                        <option value="Madhya Pradesh">Madhya Pradesh</option>
+                        <option value="Maharashtra">Maharashtra</option>
+                        <option value="Manipur">Manipur</option>
+                        <option value="Meghalaya">Meghalaya</option>
+                        <option value="Mizoram">Mizoram</option>
+                        <option value="Nagaland">Nagaland</option>
+                        <option value="Odisha">Odisha</option>
+                        <option value="Punjab">Punjab</option>
+                        <option value="Rajasthan">Rajasthan</option>
+                        <option value="Sikkim">Sikkim</option>
+                        <option value="Tamil Nadu">Tamil Nadu</option>
+                        <option value="Telangana">Telangana</option>
+                        <option value="Tripura">Tripura</option>
+                        <option value="Uttar Pradesh">Uttar Pradesh</option>
+                        <option value="Uttarakhand">Uttarakhand</option>
+                        <option value="West Bengal">West Bengal</option>
+                        <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                        <option value="Chandigarh">Chandigarh</option>
+                        <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra & Nagar Haveli and Daman & Diu</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                        <option value="Ladakh">Ladakh</option>
+                        <option value="Lakshadweep">Lakshadweep</option>
+                        <option value="Puducherry">Puducherry</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="user-role">What brings you here today?</label>
+                    <select id="user-role" required aria-label="User Role" style="width: 100%; padding: 0.875rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-md); font-family: inherit; font-size: 1rem; transition: var(--transition);">
+                        <option value="" disabled selected>Select your goal...</option>
+                        <option value="A first-time voter">I'm a first-time voter</option>
+                        <option value="A student doing research">I'm a student doing research</option>
+                        <option value="Someone helping others vote">I'm helping others vote</option>
+                        <option value="Just curious">I'm just curious</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">Get Started <i class="fa-solid fa-arrow-right"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application Layout -->
+    <div id="app-container" class="hidden">
+        
+        <!-- Mobile Header -->
+        <header class="mobile-header">
+            <h2>DemocraSee <i class="fa-solid fa-check-to-slot"></i></h2>
+            <button class="hamburger-btn" id="mobile-menu-btn" aria-label="Toggle Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </header>
+
+        <!-- Sidebar Navigation -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+        <nav class="sidebar" id="sidebar">
+            <div class="brand">
+                <h2 style="display: none;">DemocraSee <i class="fa-solid fa-check-to-slot"></i></h2>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
+                    <button id="region-display" class="badge" style="border:none; cursor:pointer;" aria-label="Edit Region">Region: Unknown <i class="fa-solid fa-pencil" style="font-size:0.6rem;"></i></button>
+                    <button id="role-display" class="badge" style="background: var(--secondary); border:none; cursor:pointer;" aria-label="Edit Role">Role: Unknown <i class="fa-solid fa-pencil" style="font-size:0.6rem;"></i></button>
+                </div>
+            </div>
+            
+            <ul class="nav-links">
+                <li><button class="nav-btn active" data-target="chat-view"><i class="fa-solid fa-robot"></i> AI Assistant</button></li>
+                <li><button class="nav-btn" data-target="timeline-view"><i class="fa-solid fa-timeline"></i> Election Timeline</button></li>
+                <li><button class="nav-btn" data-target="flashcards-view"><i class="fa-solid fa-layer-group"></i> Flashcards</button></li>
+                <li><button class="nav-btn" data-target="stats-view"><i class="fa-solid fa-chart-pie"></i> Data & Stats</button></li>
+                <li><button class="nav-btn" data-target="eligibility-view"><i class="fa-solid fa-user-check"></i> Am I Eligible? ✅</button></li>
+            </ul>
+
+            <div class="topic-menu">
+                <h3><i class="fa-solid fa-book-open"></i> Essential Quizzes</h3>
+                <div class="topic-grid">
+                    <button class="topic-btn master-quiz-btn" data-topic="Voter Registration, Candidates, Election Timeline, How Votes are Cast, Counting, and Transition of Power">
+                        <i class="fa-solid fa-graduation-cap"></i> 
+                        <span>Master Election Quiz</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            
+            <!-- Chat View -->
+            <section id="chat-view" class="view active">
+                <header class="view-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2><i class="fa-solid fa-robot"></i> Election Assistant</h2>
+                        <p>Ask anything about the election process in your region.</p>
+                    </div>
+                    <button id="clear-chat" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;"><i class="fa-solid fa-trash-can"></i> Clear Chat</button>
+                </header>
+                <div class="chat-container">
+                    <div id="chat-history" class="chat-history" aria-live="polite">
+                        <!-- Messages will appear here -->
+                        <div class="message system">
+                            <div class="message-content">
+                                Hello! I'm your Election Assistant. I'm ready to help you understand the election process. What would you like to know?
+                            </div>
+                        </div>
+                    </div>
+                    <div id="suggestion-chips" class="suggestion-chips" style="padding: 0.5rem 1rem; display: flex; gap: 0.5rem; overflow-x: auto; border-top: 1px solid var(--border); background: var(--light);">
+                        <!-- Chips injected here -->
+                    </div>
+                    <form id="chat-form" class="chat-input-area">
+                        <button type="button" id="mic-btn" class="btn btn-outline" aria-label="Voice Input" style="padding: 0.875rem; border-radius: 50%;"><i class="fa-solid fa-microphone"></i></button>
+                        <input type="text" id="chat-input" placeholder="Ask a question..." required autocomplete="off">
+                        <button type="submit" class="btn btn-primary" aria-label="Send Message"><i class="fa-solid fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Timeline View -->
+            <section id="timeline-view" class="view hidden">
+                <header class="view-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2><i class="fa-solid fa-timeline"></i> Election Timeline</h2>
+                        <p>The standard steps of the election process.</p>
+                    </div>
+                    <div class="progress-container" style="width: 200px; text-align: right;">
+                        <small style="color: var(--gray); font-weight: 500;">Overall Progress</small>
+                        <div style="width: 100%; height: 8px; background: var(--border); border-radius: 4px; margin-top: 0.25rem; overflow: hidden;">
+                            <div id="timeline-progress-bar" style="width: 0%; height: 100%; background: var(--secondary); transition: width 1s ease;"></div>
+                        </div>
+                    </div>
+                </header>
+                <div class="timeline-container" id="timeline-container">
+                    <!-- Static timeline injected here -->
+                </div>
+            </section>
+
+            <!-- Flashcards View -->
+            <section id="flashcards-view" class="view hidden">
+                <header class="view-header">
+                    <h2><i class="fa-solid fa-layer-group"></i> Election Flashcards</h2>
+                    <p>Test your knowledge with these quick facts.</p>
+                </header>
+                <div class="flashcards-container">
+                    <div class="flashcard-deck" id="flashcard-deck">
+                         <!-- Cards injected here -->
+                    </div>
+                    <div class="flashcard-controls" style="width: 100%; max-width: 600px; display: flex; justify-content: space-between; margin-top: 1rem;">
+                        <button id="shuffle-btn" class="btn btn-outline"><i class="fa-solid fa-shuffle"></i> Shuffle</button>
+                        <span id="mastery-counter" style="font-weight: 600; color: var(--secondary);">0 of 25 mastered</span>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button id="review-btn" class="btn btn-outline" style="border-color: #EF4444; color: #EF4444;">Review 🔄</button>
+                            <button id="got-it-btn" class="btn btn-outline" style="border-color: var(--secondary); color: var(--secondary);">Got it ✅</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats View -->
+            <section id="stats-view" class="view hidden">
+                <header class="view-header">
+                    <h2><i class="fa-solid fa-chart-pie"></i> Election Data & Stats</h2>
+                    <p>Visualizing real-world voter demographics and historical turnout trends.</p>
+                </header>
+                <div class="stats-controls" style="margin-bottom: 1.5rem; display: flex; gap: 0.5rem; overflow-x: auto;">
+                    <button class="btn btn-outline active chart-toggle" data-chart="pie">Seat Distribution</button>
+                    <button class="btn btn-outline chart-toggle" data-chart="bar">State Turnout</button>
+                    <button class="btn btn-outline chart-toggle" data-chart="line">Historical Trend</button>
+                    <button class="btn btn-outline chart-toggle" data-chart="column">Gender Comparison</button>
+                </div>
+                <div class="stats-container" style="background: var(--white); padding: 2rem; border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); margin-bottom: 2rem;">
+                    <div id="chart-div" style="width: 100%; height: 400px;"></div>
+                    <p id="chart-insight" style="margin-top: 1rem; color: var(--gray); font-style: italic; text-align: center;"></p>
+                </div>
+                
+                <div class="google-resources" style="background: var(--white); padding: 2rem; border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary-dark);"><i class="fa-brands fa-google"></i> Deep Dive with Google Applications</h3>
+                    <p style="margin-bottom: 1.5rem; color: var(--gray);">Want to explore raw data, real-time trends, or official publications? Use these Google tools to access verified Indian election statistics:</p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <a href="https://trends.google.com/trends/explore?date=all&geo=IN&q=Indian%20Elections,Lok%20Sabha" target="_blank" class="btn btn-outline" style="text-decoration: none;">
+                            <i class="fa-solid fa-arrow-trend-up"></i> Google Trends
+                        </a>
+                        <a href="https://www.google.com/search?q=site:eci.gov.in+election+statistics+reports" target="_blank" class="btn btn-outline" style="text-decoration: none;">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i> Official Stats (Google Search)
+                        </a>
+                        <a href="https://scholar.google.com/scholar?q=Indian+general+election+voter+turnout+statistics" target="_blank" class="btn btn-outline" style="text-decoration: none;">
+                            <i class="fa-solid fa-graduation-cap"></i> Academic Research (Google Scholar)
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Eligibility View -->
+            <section id="eligibility-view" class="view hidden">
+                <header class="view-header">
+                    <h2><i class="fa-solid fa-user-check"></i> Am I Eligible? ✅</h2>
+                    <p>Check if you meet the requirements to vote in the upcoming elections.</p>
+                </header>
+                <div class="eligibility-container" style="background: var(--white); padding: 2.5rem; border-radius: var(--radius-xl); box-shadow: var(--shadow-md); max-width: 600px; margin: 0 auto;">
+                    
+                    <div id="eligibility-progress" style="display: flex; justify-content: space-between; margin-bottom: 2rem; position: relative;">
+                        <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: var(--border); z-index: 1;"></div>
+                        <div class="step-indicator active" style="width: 30px; height: 30px; border-radius: 50%; background: var(--primary); color: var(--white); display: flex; align-items: center; justify-content: center; z-index: 2; font-weight: bold;">1</div>
+                        <div class="step-indicator" style="width: 30px; height: 30px; border-radius: 50%; background: var(--light); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; z-index: 2; font-weight: bold;">2</div>
+                        <div class="step-indicator" style="width: 30px; height: 30px; border-radius: 50%; background: var(--light); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; z-index: 2; font-weight: bold;">3</div>
+                    </div>
+
+                    <div id="eligibility-step-1" class="eligibility-step">
+                        <h3 style="margin-bottom: 1.5rem;">Are you a citizen of India?</h3>
+                        <div style="display: flex; gap: 1rem;">
+                            <button class="btn btn-outline btn-block elig-btn" data-val="yes">Yes</button>
+                            <button class="btn btn-outline btn-block elig-btn" data-val="no">No</button>
+                        </div>
+                    </div>
+
+                    <div id="eligibility-step-2" class="eligibility-step hidden">
+                        <h3 style="margin-bottom: 1.5rem;">What is your age?</h3>
+                        <div class="input-group">
+                            <input type="number" id="elig-age-input" min="1" max="120" placeholder="Enter age in years..." style="text-align: center; font-size: 1.25rem;">
+                        </div>
+                        <button id="elig-age-next" class="btn btn-primary btn-block">Next <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+
+                    <div id="eligibility-step-3" class="eligibility-step hidden">
+                        <h3 style="margin-bottom: 1.5rem;">Are you registered on the Electoral Roll (Voter List)?</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <button class="btn btn-outline btn-block elig-btn" data-val="yes">Yes, I have a Voter ID</button>
+                            <button class="btn btn-outline btn-block elig-btn" data-val="no">No, I haven't registered</button>
+                            <button class="btn btn-outline btn-block elig-btn" data-val="notsure">I'm not sure</button>
+                        </div>
+                    </div>
+
+                    <div id="eligibility-result" class="eligibility-result hidden" style="text-align: center; padding: 2rem 0 0 0;">
+                        <!-- Result injected here -->
+                    </div>
+
+                </div>
+            </section>
+            
+            <!-- Quiz Modal -->
+            <div id="quiz-overlay" class="overlay hidden">
+                <div class="modal quiz-modal">
+                    <button id="close-quiz" class="close-btn" aria-label="Close Quiz"><i class="fa-solid fa-xmark"></i></button>
+                    <h2><i class="fa-solid fa-clipboard-question"></i> Quick Quiz</h2>
+                    <p id="quiz-topic-title">Topic: Loading...</p>
+                    
+                    <div id="quiz-content" class="quiz-content">
+                         <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Generating quiz...</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+</body>
+</html>
