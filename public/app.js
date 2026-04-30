@@ -1,5 +1,4 @@
 import { setLanguage, updateUIText, currentLanguage } from './i18n.js';
-import { CONFIG } from './config.js';
 import { initChat } from './gemini.js';
 import { renderTimeline } from './timeline.js';
 import { initFlashcards } from './flashcards.js';
@@ -9,7 +8,6 @@ import { initEligibility } from './eligibility.js';
 
 // Central State Management
 export const state = {
-    apiKey: '',
     region: '',
     role: '',
     language: currentLanguage
@@ -24,19 +22,20 @@ if (document.readyState === 'loading') {
 
 function initializeApp() {
     // 1. Check LocalStorage for saved user data
-    const savedRegion = localStorage.getItem('democrasee_region');
-    const savedRole = localStorage.getItem('democrasee_role');
-    const savedKey = localStorage.getItem('democrasee_key');
+    const savedRegion = localStorage.getItem('userRegion');
+    const savedRole = localStorage.getItem('userRole');
     
     // Set language from start
     setLanguage(state.language);
     
     // Setup Language Switcher
     const langSelect = document.getElementById('language-select');
-    langSelect.addEventListener('change', (e) => {
-        state.language = e.target.value;
-        setLanguage(e.target.value);
-    });
+    if (langSelect) {
+        langSelect.addEventListener('change', (e) => {
+            state.language = e.target.value;
+            setLanguage(e.target.value);
+        });
+    }
 
     const overlay = document.getElementById('onboarding-overlay');
     const appContainer = document.getElementById('app-container');
@@ -44,7 +43,6 @@ function initializeApp() {
     if (savedRegion && savedRole) {
         state.region = savedRegion;
         state.role = savedRole;
-        state.apiKey = savedKey || CONFIG.GEMINI_API_KEY;
         
         updateSidebarDisplay();
         
@@ -55,55 +53,53 @@ function initializeApp() {
 
     // 2. Setup Onboarding Form Submission
     const onboardingForm = document.getElementById('onboarding-form');
-    onboardingForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        const keyInput = document.getElementById('gemini-key').value.trim();
-        const regionInput = document.getElementById('user-region').value.trim();
-        const roleInput = document.getElementById('user-role').value;
+    if (onboardingForm) {
+        onboardingForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const regionInput = document.getElementById('state-select').value;
+            const roleInput = document.getElementById('goal-select').value;
 
-        if (!regionInput || !roleInput) {
-            alert('Please select both Region and Role.');
-            return;
-        }
-
-        // Use key from input, fallback to config
-        state.apiKey = keyInput || CONFIG.GEMINI_API_KEY;
-        state.region = regionInput;
-        state.role = roleInput;
-
-        // Save state
-        localStorage.setItem('democrasee_region', state.region);
-        localStorage.setItem('democrasee_role', state.role);
-        if(keyInput) localStorage.setItem('democrasee_key', state.apiKey);
-
-        updateSidebarDisplay();
-
-        // Transition UI
-        overlay.classList.remove('active');
-        overlay.classList.add('hidden');
-        appContainer.classList.remove('hidden');
-        
-        // Initialize all modules safely
-        console.log("Onboarding complete. Initializing modules...");
-        const initModules = [
-            { name: 'Chat', fn: initChat },
-            { name: 'Timeline', fn: renderTimeline },
-            { name: 'Flashcards', fn: initFlashcards },
-            { name: 'Charts', fn: initCharts },
-            { name: 'Quiz', fn: initQuiz },
-            { name: 'Eligibility', fn: initEligibility }
-        ];
-
-        initModules.forEach(module => {
-            try {
-                module.fn();
-                console.log(`${module.name} initialized.`);
-            } catch (err) {
-                console.error(`Failed to initialize ${module.name}:`, err);
+            if (!regionInput || !roleInput) {
+                alert('Please select both Region and Role.');
+                return;
             }
+
+            state.region = regionInput;
+            state.role = roleInput;
+
+            // Save state
+            localStorage.setItem('userRegion', state.region);
+            localStorage.setItem('userRole', state.role);
+
+            updateSidebarDisplay();
+
+            // Transition UI
+            overlay.classList.remove('active');
+            overlay.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+            
+            // Initialize all modules safely
+            console.log("Onboarding complete. Initializing modules...");
+            const initModules = [
+                { name: 'Chat', fn: initChat },
+                { name: 'Timeline', fn: renderTimeline },
+                { name: 'Flashcards', fn: initFlashcards },
+                { name: 'Charts', fn: initCharts },
+                { name: 'Quiz', fn: initQuiz },
+                { name: 'Eligibility', fn: initEligibility }
+            ];
+
+            initModules.forEach(module => {
+                try {
+                    module.fn();
+                    console.log(`${module.name} initialized.`);
+                } catch (err) {
+                    console.error(`Failed to initialize ${module.name}:`, err);
+                }
+            });
         });
-    });
+    }
     
     // Check if already logged in from previous session
     if (savedRegion && savedRole) {
@@ -127,8 +123,10 @@ function initializeApp() {
     }
     
     // 3. Setup Edit Buttons in Sidebar
-    document.getElementById('region-display').addEventListener('click', openOnboarding);
-    document.getElementById('role-display').addEventListener('click', openOnboarding);
+    const regionBadge = document.getElementById('region-badge');
+    const roleBadge = document.getElementById('role-badge');
+    if (regionBadge) regionBadge.addEventListener('click', openOnboarding);
+    if (roleBadge) roleBadge.addEventListener('click', openOnboarding);
 
     // 4. Setup Tab Navigation
     setupNavigation();
@@ -137,21 +135,24 @@ function initializeApp() {
     setupMobileMenu();
 }
 
-function openOnboarding() {
+export function openOnboarding() {
     // Populate form with current state
-    if(state.apiKey) document.getElementById('gemini-key').value = state.apiKey;
-    if(state.region) document.getElementById('user-region').value = state.region;
-    if(state.role) document.getElementById('user-role').value = state.role;
+    if(state.region) document.getElementById('state-select').value = state.region;
+    if(state.role) document.getElementById('goal-select').value = state.role;
     
     document.getElementById('onboarding-overlay').classList.add('active');
+    document.getElementById('onboarding-overlay').classList.remove('hidden');
 }
 
-function updateSidebarDisplay() {
-    const regionDisplay = document.getElementById('region-display');
-    const roleDisplay = document.getElementById('role-display');
+export function updateSidebarDisplay() {
+    const regionBadge = document.getElementById('region-badge');
+    const roleBadge = document.getElementById('role-badge');
     
-    regionDisplay.innerHTML = `Region: ${state.region} <i class="fa-solid fa-pencil" style="font-size:0.6rem;"></i>`;
-    roleDisplay.innerHTML = `Role: ${state.role} <i class="fa-solid fa-pencil" style="font-size:0.6rem;"></i>`;
+    const region = state.region || localStorage.getItem('userRegion') || 'India';
+    const role = state.role || localStorage.getItem('userRole') || 'Voter';
+    
+    if (regionBadge) regionBadge.innerHTML = `Region: ${region} <i class="fa-solid fa-pencil" style="font-size:0.6rem;"></i>`;
+    if (roleBadge) roleBadge.innerHTML = `Role: ${role} <i class="fa-solid fa-pencil" style="font-size:0.6rem;"></i>`;
 }
 
 function setupNavigation() {
@@ -183,7 +184,7 @@ function setupNavigation() {
             // Close mobile menu if open
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            if(sidebar.classList.contains('open')) {
+            if(sidebar && sidebar.classList.contains('open')) {
                 sidebar.classList.remove('open');
                 overlay.classList.remove('active');
             }
@@ -196,15 +197,17 @@ function setupMobileMenu() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
     
-    menuBtn.addEventListener('click', () => {
-        sidebar.classList.add('open');
-        overlay.classList.add('active');
-    });
-    
-    overlay.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('active');
-    });
+    if (menuBtn && sidebar && overlay) {
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+        });
+        
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        });
+    }
 }
 
 // Utility Function: Open Chat Tab Programmatically (Used by Timeline)

@@ -30,15 +30,10 @@
             <p>Your interactive guide to understanding the election process.</p>
             
             <form id="onboarding-form">
-                <div class="input-group">
-                    <label for="gemini-key">Gemini API Key</label>
-                    <input type="password" id="gemini-key" required placeholder="Enter your API Key..." aria-label="Gemini API Key">
-                    <small>We need this to power the AI assistant. It's only stored locally in your browser.</small>
-                </div>
                 
                 <div class="input-group">
-                    <label for="user-region">Your State / Union Territory</label>
-                    <select id="user-region" required aria-label="State or Union Territory" style="width: 100%; padding: 0.875rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-md); font-family: inherit; font-size: 1rem; transition: var(--transition);">
+                    <label for="state-select">Your State / Union Territory</label>
+                    <select id="state-select" required aria-label="State or Union Territory" style="width: 100%; padding: 0.875rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-md); font-family: inherit; font-size: 1rem; transition: var(--transition);">
                         <option value="" disabled selected>Select your state...</option>
                         <option value="Andhra Pradesh">Andhra Pradesh</option>
                         <option value="Arunachal Pradesh">Arunachal Pradesh</option>
@@ -80,8 +75,8 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="user-role">What brings you here today?</label>
-                    <select id="user-role" required aria-label="User Role" style="width: 100%; padding: 0.875rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-md); font-family: inherit; font-size: 1rem; transition: var(--transition);">
+                    <label for="goal-select">What brings you here today?</label>
+                    <select id="goal-select" required aria-label="User Role" style="width: 100%; padding: 0.875rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-md); font-family: inherit; font-size: 1rem; transition: var(--transition);">
                         <option value="" disabled selected>Select your goal...</option>
                         <option value="A first-time voter">I'm a first-time voter</option>
                         <option value="A student doing research">I'm a student doing research</option>
@@ -112,8 +107,8 @@
             <div class="brand">
                 <h2 style="display: none;">DemocraSee <i class="fa-solid fa-check-to-slot"></i></h2>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
-                    <button id="region-display" class="badge" style="border:none; cursor:pointer;" aria-label="Edit Region">Region: Unknown <i class="fa-solid fa-pencil" style="font-size:0.6rem;"></i></button>
-                    <button id="role-display" class="badge" style="background: var(--secondary); border:none; cursor:pointer;" aria-label="Edit Role">Role: Unknown <i class="fa-solid fa-pencil" style="font-size:0.6rem;"></i></button>
+                    <button id="region-badge" class="badge" style="border:none; cursor:pointer;" aria-label="Edit Region">Region: Unknown <i class="fa-solid fa-pencil" style="font-size:0.6rem;"></i></button>
+                    <button id="role-badge" class="badge" style="background: var(--secondary); border:none; cursor:pointer;" aria-label="Edit Role">Role: Unknown <i class="fa-solid fa-pencil" style="font-size:0.6rem;"></i></button>
                 </div>
             </div>
             

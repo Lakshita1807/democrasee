@@ -1,71 +1,163 @@
 import { openChatTab } from './app.js';
 
-const timelineData = [
-    { title: "Election Announcement", icon: "fa-bullhorn", dateRange: "T-minus 60 Days", description: "The Election Commission announces the dates, triggering the Model Code of Conduct." },
-    { title: "Voter Registration Deadline", icon: "fa-address-card", dateRange: "T-minus 45 Days", description: "Last day for citizens to enroll or update their details on the electoral roll." },
-    { title: "Nomination Filing", icon: "fa-file-signature", dateRange: "T-minus 30 Days", description: "Candidates file their nomination papers and affidavits to the Returning Officer." },
-    { title: "Nomination Scrutiny", icon: "fa-magnifying-glass", dateRange: "T-minus 28 Days", description: "The ECI scrutinizes nominations and candidates can withdraw if they choose." },
-    { title: "Campaign Period", icon: "fa-users", dateRange: "T-minus 25 Days", description: "Candidates hold rallies, distribute manifestos, and reach out to voters." },
-    { title: "Campaign Silence", icon: "fa-volume-xmark", dateRange: "48 Hours Before", description: "All public campaigning must stop to give voters a peaceful time to reflect." },
-    { title: "Voting Day", icon: "fa-check-to-slot", dateRange: "Election Day", description: "Voters go to their designated polling booths to cast their votes securely." },
-    { title: "Vote Counting", icon: "fa-calculator", dateRange: "T-plus 3 Days", description: "EVMs are opened and votes are counted under strict supervision." },
-    { title: "Results Declaration", icon: "fa-trophy", dateRange: "T-plus 3 Days", description: "The final results are declared and the winning candidates receive certificates." },
-    { title: "Oath Taking / New Government", icon: "fa-handshake", dateRange: "T-plus 15 Days", description: "The newly elected members take their oaths and form the new government." }
+const TIMELINE_PHASES = [
+  {
+    id: 1,
+    icon: "📢",
+    title: "Election Announcement",
+    status: "completed",
+    dateRange: "January 2024",
+    short: "ECI announces election schedule. MCC begins.",
+    detail: "The Election Commission of India officially announces the election schedule. The Model Code of Conduct (MCC) comes into effect immediately, restricting ruling parties from making policy announcements that could influence voters."
+  },
+  {
+    id: 2,
+    icon: "📋",
+    title: "Electoral Roll Revision",
+    status: "completed",
+    dateRange: "Jan - Feb 2024",
+    short: "Voter list updated. New voters can register.",
+    detail: "The electoral roll is updated. Citizens can apply to be added using Form 6 on voters.eci.gov.in. Booth Level Officers (BLOs) verify addresses. Last date to register is typically 30 days before polling."
+  },
+  {
+    id: 3,
+    icon: "🏃",
+    title: "Nomination Filing",
+    status: "completed",
+    dateRange: "March 2024",
+    short: "Candidates file nominations with Returning Officer.",
+    detail: "Candidates submit nomination papers to the Returning Officer along with a security deposit of ₹25,000 (₹12,500 for SC/ST candidates) and a signed affidavit (Form 26) declaring assets, liabilities, and any criminal cases."
+  },
+  {
+    id: 4,
+    icon: "✅",
+    title: "Nomination Scrutiny",
+    status: "completed",
+    dateRange: "April 2024",
+    short: "Returning Officer verifies all nominations.",
+    detail: "The Returning Officer scrutinizes all nominations for validity. Invalid nominations are rejected. Candidates can withdraw their candidacy within 2 days after scrutiny is completed."
+  },
+  {
+    id: 5,
+    icon: "📣",
+    title: "Election Campaign",
+    status: "completed",
+    dateRange: "April - May 2024",
+    short: "Parties and candidates campaign across constituencies.",
+    detail: "Candidates and parties campaign to win voter support. Rules prohibit appeals based on caste or religion. Candidates have a spending limit of ₹95 lakh for Lok Sabha seats. ECI monitors compliance strictly."
+  },
+  {
+    id: 6,
+    icon: "🚫",
+    title: "Campaign Silence Period",
+    status: "completed",
+    dateRange: "48 hours before each polling date",
+    short: "All campaigning stops 48 hours before voting.",
+    detail: "48 hours before polling begins, all public campaigning must stop. No rallies, public meetings, or political advertisements are allowed — including on social media. This is enforced strictly by the ECI."
+  },
+  {
+    id: 7,
+    icon: "🗳️",
+    title: "Polling Day",
+    status: "current",
+    dateRange: "April 19 - June 1, 2024 (7 phases)",
+    short: "Voters cast their votes at assigned booths.",
+    detail: "Voters visit their assigned polling booth with a valid ID (Voter ID, Aadhaar, Passport, PAN, Driving License, etc.). They vote on an EVM and verify via VVPAT slip shown for 7 seconds. Indelible ink is applied to the left index finger. Polling hours: 7 AM to 6 PM."
+  },
+  {
+    id: 8,
+    icon: "🔢",
+    title: "Vote Counting",
+    status: "upcoming",
+    dateRange: "June 4, 2024",
+    short: "EVMs are unsealed and votes counted round by round.",
+    detail: "On counting day, EVMs are transported under heavy security and unsealed. Votes are counted round by round for each constituency. Each round result is announced. Candidates and their agents are present throughout."
+  },
+  {
+    id: 9,
+    icon: "📊",
+    title: "Results Declaration",
+    status: "upcoming",
+    dateRange: "June 4, 2024",
+    short: "Winning candidates receive election certificates.",
+    detail: "The Returning Officer declares the winning candidate and issues a Certificate of Election. ECI publishes final results on results.eci.gov.in. The President invites the leader of the majority party or alliance to form the government."
+  },
+  {
+    id: 10,
+    icon: "🤝",
+    title: "Oath Taking & New Government",
+    status: "upcoming",
+    dateRange: "June 2024",
+    short: "New PM and Cabinet take oath and form government.",
+    detail: "The President administers the oath of office to the new Prime Minister and Council of Ministers. The new government presents its agenda, typically announcing key priorities within the first 100 days."
+  }
 ];
-
-// Mocking current phase as index 6 (Voting Day) for UI demonstration
-const CURRENT_PHASE_INDEX = 6;
 
 export function renderTimeline() {
     const container = document.getElementById('timeline-container');
     const progressBar = document.getElementById('timeline-progress-bar');
     
-    if(!container) return;
+    if (!container) return;
     
     container.innerHTML = '';
     
-    // Update progress bar
-    const progressPercent = ((CURRENT_PHASE_INDEX + 1) / timelineData.length) * 100;
-    progressBar.style.width = `${progressPercent}%`;
+    let completedCount = 0;
     
-    timelineData.forEach((item, index) => {
-        const isCurrent = index === CURRENT_PHASE_INDEX;
-        const isPast = index < CURRENT_PHASE_INDEX;
+    TIMELINE_PHASES.forEach(phase => {
+        if (phase.status === 'completed') completedCount++;
         
-        const dotColor = isCurrent ? 'var(--secondary)' : (isPast ? 'var(--primary)' : 'var(--gray)');
-        const glow = isCurrent ? 'box-shadow: 0 0 15px var(--secondary); border-color: #fff;' : '';
-        
-        const html = `
-            <div class="timeline-item" style="opacity: ${isPast || isCurrent ? '1' : '0.6'};">
-                <div class="timeline-marker">
-                    <div class="timeline-dot" style="background: ${dotColor}; ${glow} display: flex; align-items:center; justify-content:center; color:white; font-size:0.7rem;">
-                        ${isPast ? '<i class="fa-solid fa-check"></i>' : (isCurrent ? '<i class="fa-solid fa-spinner fa-spin"></i>' : '')}
+        const phaseEl = document.createElement('div');
+        phaseEl.className = `timeline-item ${phase.status}`;
+        if (phase.status === 'current') phaseEl.style.borderLeft = '4px solid var(--secondary)';
+        if (phase.status === 'completed') phaseEl.style.opacity = '0.8';
+
+        const statusBadge = {
+            'completed': '<span class="badge" style="background: var(--secondary);">completed ✅</span>',
+            'current': '<span class="badge" style="background: var(--primary);">current 🔄</span>',
+            'upcoming': '<span class="badge" style="background: var(--gray);">upcoming 🔜</span>'
+        }[phase.status];
+
+        phaseEl.innerHTML = `
+            <div class="timeline-marker">
+                <div class="timeline-dot" style="background: ${phase.status === 'completed' ? 'var(--secondary)' : (phase.status === 'current' ? 'var(--primary)' : 'var(--border)')}; border-color: ${phase.status === 'completed' ? 'var(--secondary)' : (phase.status === 'current' ? 'var(--primary-light)' : 'var(--border)')}"></div>
+                <div class="timeline-line"></div>
+            </div>
+            <div class="timeline-content" style="cursor: pointer; position: relative;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.1rem;">${phase.icon} ${phase.title}</h3>
+                        <small style="color: var(--gray); font-weight: 500;">${phase.dateRange}</small>
                     </div>
-                    <div class="timeline-line"></div>
+                    ${statusBadge}
                 </div>
-                <div class="timeline-content" ${isCurrent ? 'style="border-color: var(--secondary); border-width: 2px;"' : ''}>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <h3><i class="fa-solid ${item.icon}" style="color: ${dotColor}; margin-right: 0.5rem;"></i> ${item.title}</h3>
-                        <span class="badge" style="background: ${isCurrent ? 'var(--secondary)' : 'var(--gray)'}; margin-top:0;">${item.dateRange}</span>
-                    </div>
-                    <p style="margin-top: 0.5rem; color: var(--gray);">${item.description}</p>
-                    
-                    <button class="btn btn-outline ask-ai-btn" style="margin-top: 1rem; padding: 0.5rem 1rem; font-size: 0.85rem;" data-topic="${item.title}">
-                        Ask AI about this <i class="fa-solid fa-robot"></i>
+                <p class="phase-short" style="margin-bottom: 0;">${phase.short}</p>
+                <div class="phase-detail hidden" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <p style="font-size: 0.95rem; color: var(--dark-lighter);">${phase.detail}</p>
+                    <button class="btn btn-outline ask-ai-btn" style="margin-top: 1rem; font-size: 0.85rem; padding: 0.5rem 1rem;">
+                        Ask AI about this →
                     </button>
                 </div>
             </div>
         `;
-        
-        container.insertAdjacentHTML('beforeend', html);
+
+        const content = phaseEl.querySelector('.timeline-content');
+        const detail = phaseEl.querySelector('.phase-detail');
+        const askBtn = phaseEl.querySelector('.ask-ai-btn');
+
+        content.addEventListener('click', (e) => {
+            if (e.target === askBtn) return;
+            detail.classList.toggle('hidden');
+        });
+
+        askBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openChatTab(`Tell me more about the "${phase.title}" phase of the Indian election process.`);
+        });
+
+        container.appendChild(phaseEl);
     });
     
-    // Attach Event Listeners to AI Buttons
-    document.querySelectorAll('.ask-ai-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const topic = e.currentTarget.dataset.topic;
-            const prompt = `Can you explain more about the "${topic}" phase in the Indian election process?`;
-            openChatTab(prompt);
-        });
-    });
+    if (progressBar) {
+        progressBar.style.width = `${(completedCount / TIMELINE_PHASES.length) * 100}%`;
+    }
 }

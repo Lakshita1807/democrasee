@@ -70,15 +70,8 @@ async function fetchGeminiResponse(prompt, forceJson = false) {
     if (responseCache[cacheKey]) {
         return responseCache[cacheKey];
     }
-    
-    if (state.apiKey === 'demo') {
-        await new Promise(r => setTimeout(r, 1000));
-        return `This is a mock response because you are using the 'demo' key. To see real AI answers, please enter a valid Google Gemini API Key. \n\nI see you are a **${state.role}** from **${state.region}**!`;
-    }
 
     try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${state.apiKey}`;
-        
         const systemInstruction = `You are ElectionGuide, a friendly civic education assistant for Indian elections. 
         Always respond in simple language. Never favor any political party or candidate. 
         Break answers into numbered steps. Use emojis for dates (📅), steps (✅), and upcoming items (🔜). 
@@ -93,22 +86,15 @@ async function fetchGeminiResponse(prompt, forceJson = false) {
             contents = [{ role: 'user', parts: [{ text: prompt }] }];
         }
 
-        const requestBody = {
-            systemInstruction: { parts: [{ text: systemInstruction }] },
-            contents: contents,
-            generationConfig: {
-                temperature: 0.7
-            }
-        };
-
-        if (forceJson) {
-            requestBody.generationConfig.responseMimeType = "application/json";
-        }
-
-        const response = await fetch(url, {
+        const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify({
+                prompt,
+                contents,
+                systemInstruction,
+                forceJson
+            })
         });
 
         if (!response.ok) {
@@ -199,11 +185,6 @@ function clearChat() {
 async function generateSuggestionChips(lastResponse) {
     const chipsContainer = document.getElementById('suggestion-chips');
     chipsContainer.innerHTML = ''; // Clear old chips
-    
-    if (state.apiKey === 'demo') {
-        renderChips(["What documents do I need? 📄", "What's the deadline? 📅", "How to check status? 🔍"]);
-        return;
-    }
     
     const prompt = `Based on this previous answer: "${lastResponse.substring(0, 100)}...", generate exactly 3 short, relevant follow-up questions the user might ask next. 
     Make them brief (under 6 words each) and include a relevant emoji at the end of each.
