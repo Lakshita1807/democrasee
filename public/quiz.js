@@ -1,263 +1,141 @@
-const QUIZ_QUESTIONS = [
-  {
-    question: "What does ECI stand for?",
-    options: [
-      "Electoral Council of India",
-      "Election Commission of India",
-      "Electoral Committee of India",
-      "Election Council of India"
-    ],
-    correct: 1,
-    explanation: "ECI is a constitutional body established under Article 324 to conduct free and fair elections in India."
-  },
-  {
-    question: "What is the minimum age to vote in India?",
-    options: ["16 years", "21 years", "18 years", "25 years"],
-    correct: 2,
-    explanation: "The voting age was lowered from 21 to 18 years by the 61st Constitutional Amendment Act in 1988."
-  },
-  {
-    question: "What does NOTA stand for?",
-    options: [
-      "No Other Than Abstain",
-      "Not One Total Answer",
-      "None Of The Above",
-      "No Other Trusted Alternative"
-    ],
-    correct: 2,
-    explanation: "NOTA was introduced by the Supreme Court in 2013 to allow voters to reject all candidates."
-  },
-  {
-    question: "Which Article of the Constitution establishes the Election Commission?",
-    options: ["Article 280", "Article 315", "Article 324", "Article 356"],
-    correct: 2,
-    explanation: "Article 324 gives the Election Commission superintendence, direction and control of elections."
-  },
-  {
-    question: "What does VVPAT stand for?",
-    options: [
-      "Voter Verified Paper Audit Trail",
-      "Verified Voter Paper and Tally",
-      "Vote Verification Printing Audit Tool",
-      "Verified Voting Paper Audit Technology"
-    ],
-    correct: 0,
-    explanation: "VVPAT was introduced to add transparency — it shows a paper slip of your vote for 7 seconds after you press the EVM button."
-  },
-  {
-    question: "How many seats are needed for a majority in Lok Sabha?",
-    options: ["243", "252", "261", "272"],
-    correct: 3,
-    explanation: "A simple majority requires 272 seats — more than half of the 543 elected Lok Sabha seats."
-  },
-  {
-    question: "How many Lok Sabha constituencies are there in India?",
-    options: ["428", "543", "552", "600"],
-    correct: 1,
-    explanation: "There are 543 elected Lok Sabha constituencies across all states and union territories."
-  },
-  {
-    question: "When does the Model Code of Conduct come into effect?",
-    options: [
-      "30 days before polling",
-      "When nominations open",
-      "When ECI announces the election schedule",
-      "On polling day"
-    ],
-    correct: 2,
-    explanation: "The MCC kicks in immediately when the Election Commission announces the election schedule."
-  },
-  {
-    question: "What is the security deposit for a general Lok Sabha candidate?",
-    options: ["₹10,000", "₹25,000", "₹50,000", "₹1,00,000"],
-    correct: 1,
-    explanation: "The deposit is ₹25,000 for general candidates and ₹12,500 for SC/ST candidates. It is forfeited if they get less than 1/6th of total votes."
-  },
-  {
-    question: "Where is India's indelible election ink manufactured?",
-    options: [
-      "Bengaluru Chemicals Ltd",
-      "Government Mysore Paints & Varnish Ltd",
-      "Mumbai Ink Corporation",
-      "Delhi State Industries"
-    ],
-    correct: 1,
-    explanation: "The indelible ink used in Indian elections is exclusively manufactured at Government Mysore Paints & Varnish Ltd in Karnataka."
-  }
+const QUESTIONS = [
+  { q:"What does ECI stand for?",
+    opts:["Electoral Council of India","Election Commission of India","Electoral Committee of India","Election Council of India"],
+    ans:1, exp:"ECI is established under Article 324 of the Constitution to conduct free and fair elections." },
+  { q:"Minimum age to vote in India?",
+    opts:["16 years","21 years","18 years","25 years"],
+    ans:2, exp:"Lowered from 21 to 18 by the 61st Constitutional Amendment Act, 1988." },
+  { q:"What does NOTA stand for?",
+    opts:["No Other Than Abstain","Not One Total Answer","None Of The Above","No Other Trusted Alternative"],
+    ans:2, exp:"NOTA introduced by Supreme Court order in 2013 to allow voters to reject all candidates." },
+  { q:"Which Article establishes the Election Commission?",
+    opts:["Article 280","Article 315","Article 324","Article 356"],
+    ans:2, exp:"Article 324 gives ECI superintendence over all elections to Parliament and State Legislatures." },
+  { q:"What does VVPAT stand for?",
+    opts:["Voter Verified Paper Audit Trail","Verified Voter Paper and Tally","Vote Verification Printing Audit Tool","Verified Voting Paper Audit Technology"],
+    ans:0, exp:"VVPAT shows a paper slip of your vote for 7 seconds to verify your EVM choice." },
+  { q:"Seats needed for Lok Sabha majority?",
+    opts:["243","252","261","272"],
+    ans:3, exp:"Simple majority = 272 seats (more than half of 543 elected seats)." },
+  { q:"How many Lok Sabha constituencies in India?",
+    opts:["428","543","552","600"],
+    ans:1, exp:"There are 543 elected Lok Sabha constituencies across all states and UTs." },
+  { q:"When does Model Code of Conduct begin?",
+    opts:["30 days before polling","When nominations open","When ECI announces schedule","On polling day"],
+    ans:2, exp:"MCC kicks in immediately when ECI announces the election schedule." },
+  { q:"Security deposit for general Lok Sabha candidate?",
+    opts:["₹10,000","₹25,000","₹50,000","₹1,00,000"],
+    ans:1, exp:"₹25,000 for general, ₹12,500 for SC/ST. Forfeited if votes below 1/6th of total." },
+  { q:"Where is India's indelible election ink made?",
+    opts:["Bengaluru Chemicals Ltd","Government Mysore Paints & Varnish Ltd","Mumbai Ink Corporation","Delhi State Industries"],
+    ans:1, exp:"Exclusively manufactured at Government Mysore Paints & Varnish Ltd in Karnataka." }
 ];
 
-let currentQuestionIndex = 0;
-let score = 0;
-let timerInterval;
-let timeRemaining = 30;
+let qIndex = 0, score = 0, timer, timeLeft = 30;
 
-export function initQuiz() {
-    const quizBtn = document.querySelector('.master-quiz-btn');
-    const closeBtn = document.getElementById('close-quiz');
-    
-    if (quizBtn) {
-        quizBtn.addEventListener('click', showStartScreen);
-    }
-    
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            clearInterval(timerInterval);
-            document.getElementById('quiz-overlay').classList.add('hidden');
-        });
-    }
+function initQuiz() {
+  showQuizStart();
 }
 
-function showStartScreen() {
-    const overlay = document.getElementById('quiz-overlay');
-    const content = document.getElementById('quiz-content');
-    const title = document.getElementById('quiz-topic-title');
-    
-    overlay.classList.remove('hidden');
-    overlay.classList.add('active');
-    title.innerText = "Topic: Master Election Quiz";
-    
-    content.innerHTML = `
-        <div style="text-align: center; padding: 1rem;">
-            <div style="font-size: 4rem; margin-bottom: 1.5rem;">🏆</div>
-            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Ready to test your knowledge?</h3>
-            <p style="color: var(--gray); margin-bottom: 2rem;">10 Questions • 30 sec each • No retries</p>
-            <button id="start-quiz-now" class="btn btn-primary btn-block">Start Quiz <i class="fa-solid fa-play"></i></button>
-        </div>
-    `;
-    
-    document.getElementById('start-quiz-now').addEventListener('click', startQuiz);
+function showQuizStart() {
+  document.getElementById('tab-quiz').innerHTML = `
+    <div class="quiz-start">
+      <div class="quiz-icon">🎓</div>
+      <h2>Master Election Quiz</h2>
+      <p>Test your knowledge of Indian elections</p>
+      <div class="quiz-meta">
+        <span>📝 10 Questions</span>
+        <span>⏱️ 30 sec each</span>
+        <span>🏆 Win badges</span>
+      </div>
+      <button class="btn-primary" onclick="startQuiz()">Start Quiz →</button>
+    </div>`;
 }
 
 function startQuiz() {
-    currentQuestionIndex = 0;
-    score = 0;
-    renderQuestion();
+  qIndex = 0; score = 0;
+  showQuestion();
 }
 
-function renderQuestion() {
-    if (currentQuestionIndex >= QUIZ_QUESTIONS.length) {
-        showResults();
-        return;
-    }
-    
-    const question = QUIZ_QUESTIONS[currentQuestionIndex];
-    const content = document.getElementById('quiz-content');
-    
-    content.innerHTML = `
-        <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
-            <span class="badge" style="background: var(--primary);">Question ${currentQuestionIndex + 1} of 10</span>
-            <span id="quiz-timer" style="font-weight: bold; color: var(--primary-dark);"><i class="fa-regular fa-clock"></i> 30s</span>
-        </div>
-        <div style="width: 100%; height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 1.5rem; overflow: hidden;">
-            <div id="quiz-timer-bar" style="width: 100%; height: 100%; background: var(--secondary); transition: width 1s linear;"></div>
-        </div>
-        <h3 style="font-size: 1.2rem; margin-bottom: 1.5rem; color: var(--dark);">${question.question}</h3>
-        <div class="quiz-options-container">
-            ${question.options.map((opt, i) => `
-                <button class="quiz-option" data-index="${i}">${opt}</button>
-            `).join('')}
-        </div>
-        <div id="quiz-feedback" class="quiz-feedback" style="margin-top: 1.5rem; padding: 1rem; border-radius: var(--radius-md); display: none;"></div>
-        <button id="next-question-btn" class="btn btn-primary btn-block" style="margin-top: 1.5rem; display: none;">Next Question <i class="fa-solid fa-arrow-right"></i></button>
-    `;
-    
-    document.querySelectorAll('.quiz-option').forEach(btn => {
-        btn.addEventListener('click', handleAnswer);
-    });
-    
-    document.getElementById('next-question-btn').addEventListener('click', () => {
-        currentQuestionIndex++;
-        renderQuestion();
-    });
-    
-    startTimeLimit();
+function showQuestion() {
+  if (qIndex >= QUESTIONS.length) { showResults(); return; }
+  const q = QUESTIONS[qIndex];
+  timeLeft = 30;
+  document.getElementById('tab-quiz').innerHTML = `
+    <div class="quiz-question">
+      <div class="quiz-progress">Question ${qIndex+1} of ${QUESTIONS.length}</div>
+      <div class="quiz-timer-bar"><div id="timer-fill" style="width:100%"></div></div>
+      <div id="timer-text">⏱️ ${timeLeft}s</div>
+      <h3>${q.q}</h3>
+      <div class="quiz-options">
+        ${q.opts.map((o,i) => 
+          `<button class="quiz-opt" onclick="selectAnswer(${i})">${o}</button>`
+        ).join('')}
+      </div>
+    </div>`;
+  startTimer();
 }
 
-function startTimeLimit() {
-    timeRemaining = 30;
-    clearInterval(timerInterval);
-    const timerDisplay = document.getElementById('quiz-timer');
-    const timerBar = document.getElementById('quiz-timer-bar');
-    
-    timerInterval = setInterval(() => {
-        timeRemaining--;
-        if (timerDisplay) timerDisplay.innerHTML = `<i class="fa-regular fa-clock"></i> ${timeRemaining}s`;
-        if (timerBar) {
-            timerBar.style.width = `${(timeRemaining / 30) * 100}%`;
-            if (timeRemaining < 10) {
-                timerBar.style.backgroundColor = '#EF4444';
-                timerDisplay.style.color = '#EF4444';
-            }
-        }
-        
-        if (timeRemaining <= 0) {
-            clearInterval(timerInterval);
-            revealAnswer(-1); // -1 means timeout
-        }
-    }, 1000);
+function startTimer() {
+  clearInterval(timer);
+  timer = setInterval(() => {
+    timeLeft--;
+    const fill = document.getElementById('timer-fill');
+    const text = document.getElementById('timer-text');
+    if (fill) fill.style.width = (timeLeft/30*100) + '%';
+    if (fill && timeLeft <= 10) fill.style.background = '#EF4444';
+    if (text) text.textContent = '⏱️ ' + timeLeft + 's';
+    if (timeLeft <= 0) { clearInterval(timer); selectAnswer(-1); }
+  }, 1000);
 }
 
-function handleAnswer(e) {
-    clearInterval(timerInterval);
-    const selectedIndex = parseInt(e.target.dataset.index);
-    revealAnswer(selectedIndex);
-}
-
-function revealAnswer(selectedIndex) {
-    const question = QUIZ_QUESTIONS[currentQuestionIndex];
-    const feedback = document.getElementById('quiz-feedback');
-    const nextBtn = document.getElementById('next-question-btn');
-    const options = document.querySelectorAll('.quiz-option');
-    
-    options.forEach((btn, i) => {
-        btn.disabled = true;
-        if (i === question.correct) {
-            btn.classList.add('correct');
-        } else if (i === selectedIndex) {
-            btn.classList.add('incorrect');
-        }
-    });
-    
-    feedback.style.display = 'block';
-    if (selectedIndex === question.correct) {
-        score++;
-        feedback.style.background = 'rgba(34, 197, 94, 0.1)';
-        feedback.style.color = 'var(--secondary)';
-        feedback.innerHTML = `<strong>Correct! ✅</strong><br><small>${question.explanation}</small>`;
-    } else {
-        feedback.style.background = 'rgba(239, 68, 68, 0.1)';
-        feedback.style.color = '#EF4444';
-        feedback.innerHTML = `<strong>${selectedIndex === -1 ? "Time's Up! ⏰" : "Incorrect ❌"}</strong><br><small>${question.explanation}</small>`;
-    }
-    
-    nextBtn.style.display = 'block';
+function selectAnswer(chosen) {
+  clearInterval(timer);
+  const q = QUESTIONS[qIndex];
+  const correct = chosen === q.ans;
+  if (correct) score++;
+  
+  const opts = document.querySelectorAll('.quiz-opt');
+  opts.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.ans) btn.style.background = '#22C55E';
+    else if (i === chosen) btn.style.background = '#EF4444';
+  });
+  
+  const exp = document.createElement('div');
+  exp.className = 'quiz-explanation';
+  exp.innerHTML = `<strong>${correct ? '✅ Correct!' : '❌ Wrong!'}</strong><br>${q.exp}`;
+  document.querySelector('.quiz-options').after(exp);
+  
+  const next = document.createElement('button');
+  next.className = 'btn-primary';
+  next.style.marginTop = '20px';
+  next.textContent = qIndex < 9 ? 'Next Question →' : 'See Results 🏆';
+  next.onclick = () => { qIndex++; showQuestion(); };
+  exp.after(next);
 }
 
 function showResults() {
-    const content = document.getElementById('quiz-content');
-    let badge = '';
-    let emoji = '';
-    
-    if (score >= 9) {
-        badge = "🥇 Election Expert";
-        emoji = "🥇";
-    } else if (score >= 6) {
-        badge = "🥈 Civic Scholar";
-        emoji = "🥈";
-    } else {
-        badge = "🥉 Keep Learning";
-        emoji = "🥉";
-    }
-    
-    content.innerHTML = `
-        <div style="text-align: center; padding: 2rem 0;">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">${emoji}</div>
-            <h3 style="font-size: 1.5rem; color: var(--primary-dark); margin-bottom: 0.5rem;">${badge}</h3>
-            <div style="font-size: 3rem; font-weight: bold; color: var(--secondary); margin-bottom: 1rem;">${score} / 10</div>
-            <p style="color: var(--gray); margin-bottom: 2rem;">You've completed the Master Election Quiz!</p>
-            <button id="retry-quiz-btn" class="btn btn-outline btn-block"><i class="fa-solid fa-rotate-right"></i> Retry Quiz</button>
-        </div>
-    `;
-    
-    document.getElementById('retry-quiz-btn').addEventListener('click', startQuiz);
+  const badge = score >= 9 ? '🥇 Election Expert!' :
+                score >= 6 ? '🥈 Civic Scholar!' : '🥉 Keep Learning!';
+  document.getElementById('tab-quiz').innerHTML = `
+    <div class="quiz-results">
+      <div class="quiz-icon">🏆</div>
+      <div class="result-badge" style="font-weight:700; color:var(--primary); margin-bottom:10px;">${badge}</div>
+      <h2>You scored ${score}/10</h2>
+      <p style="margin: 10px 0 24px;">${score >= 9 ? 'Outstanding! You know Indian elections inside out!' :
+          score >= 6 ? 'Great job! You have solid election knowledge!' :
+          'Good effort! Keep exploring DemocraSee to learn more!'}</p>
+      <div class="result-actions" style="display:flex; gap:12px; justify-content:center;">
+        <button class="btn-primary" onclick="startQuiz()">Retry Quiz 🔄</button>
+        <button class="btn-secondary" onclick="shareScore(${score})">Share Score 📤</button>
+      </div>
+    </div>`;
+}
+
+function shareScore(s) {
+  const text = `I scored ${s}/10 on the DemocraSee Election Quiz! 🗳️ Test your knowledge here!`;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Score copied to clipboard! Share it anywhere 🎉');
+  });
 }

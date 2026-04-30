@@ -1,163 +1,106 @@
-import { openChatTab } from './app.js';
+const PHASES = [
+  { id:1, icon:"📢", title:"Election Announcement",
+    status:"completed", date:"January 2024",
+    short:"ECI announces schedule. MCC begins immediately.",
+    detail:"The Election Commission of India officially announces the complete election schedule including polling dates for all phases. The Model Code of Conduct comes into force immediately, restricting the ruling government from making new policy announcements that could influence voters." },
 
-const TIMELINE_PHASES = [
-  {
-    id: 1,
-    icon: "📢",
-    title: "Election Announcement",
-    status: "completed",
-    dateRange: "January 2024",
-    short: "ECI announces election schedule. MCC begins.",
-    detail: "The Election Commission of India officially announces the election schedule. The Model Code of Conduct (MCC) comes into effect immediately, restricting ruling parties from making policy announcements that could influence voters."
-  },
-  {
-    id: 2,
-    icon: "📋",
-    title: "Electoral Roll Revision",
-    status: "completed",
-    dateRange: "Jan - Feb 2024",
-    short: "Voter list updated. New voters can register.",
-    detail: "The electoral roll is updated. Citizens can apply to be added using Form 6 on voters.eci.gov.in. Booth Level Officers (BLOs) verify addresses. Last date to register is typically 30 days before polling."
-  },
-  {
-    id: 3,
-    icon: "🏃",
-    title: "Nomination Filing",
-    status: "completed",
-    dateRange: "March 2024",
-    short: "Candidates file nominations with Returning Officer.",
-    detail: "Candidates submit nomination papers to the Returning Officer along with a security deposit of ₹25,000 (₹12,500 for SC/ST candidates) and a signed affidavit (Form 26) declaring assets, liabilities, and any criminal cases."
-  },
-  {
-    id: 4,
-    icon: "✅",
-    title: "Nomination Scrutiny",
-    status: "completed",
-    dateRange: "April 2024",
-    short: "Returning Officer verifies all nominations.",
-    detail: "The Returning Officer scrutinizes all nominations for validity. Invalid nominations are rejected. Candidates can withdraw their candidacy within 2 days after scrutiny is completed."
-  },
-  {
-    id: 5,
-    icon: "📣",
-    title: "Election Campaign",
-    status: "completed",
-    dateRange: "April - May 2024",
-    short: "Parties and candidates campaign across constituencies.",
-    detail: "Candidates and parties campaign to win voter support. Rules prohibit appeals based on caste or religion. Candidates have a spending limit of ₹95 lakh for Lok Sabha seats. ECI monitors compliance strictly."
-  },
-  {
-    id: 6,
-    icon: "🚫",
-    title: "Campaign Silence Period",
-    status: "completed",
-    dateRange: "48 hours before each polling date",
-    short: "All campaigning stops 48 hours before voting.",
-    detail: "48 hours before polling begins, all public campaigning must stop. No rallies, public meetings, or political advertisements are allowed — including on social media. This is enforced strictly by the ECI."
-  },
-  {
-    id: 7,
-    icon: "🗳️",
-    title: "Polling Day",
-    status: "current",
-    dateRange: "April 19 - June 1, 2024 (7 phases)",
-    short: "Voters cast their votes at assigned booths.",
-    detail: "Voters visit their assigned polling booth with a valid ID (Voter ID, Aadhaar, Passport, PAN, Driving License, etc.). They vote on an EVM and verify via VVPAT slip shown for 7 seconds. Indelible ink is applied to the left index finger. Polling hours: 7 AM to 6 PM."
-  },
-  {
-    id: 8,
-    icon: "🔢",
-    title: "Vote Counting",
-    status: "upcoming",
-    dateRange: "June 4, 2024",
-    short: "EVMs are unsealed and votes counted round by round.",
-    detail: "On counting day, EVMs are transported under heavy security and unsealed. Votes are counted round by round for each constituency. Each round result is announced. Candidates and their agents are present throughout."
-  },
-  {
-    id: 9,
-    icon: "📊",
-    title: "Results Declaration",
-    status: "upcoming",
-    dateRange: "June 4, 2024",
-    short: "Winning candidates receive election certificates.",
-    detail: "The Returning Officer declares the winning candidate and issues a Certificate of Election. ECI publishes final results on results.eci.gov.in. The President invites the leader of the majority party or alliance to form the government."
-  },
-  {
-    id: 10,
-    icon: "🤝",
-    title: "Oath Taking & New Government",
-    status: "upcoming",
-    dateRange: "June 2024",
-    short: "New PM and Cabinet take oath and form government.",
-    detail: "The President administers the oath of office to the new Prime Minister and Council of Ministers. The new government presents its agenda, typically announcing key priorities within the first 100 days."
-  }
+  { id:2, icon:"📋", title:"Electoral Roll Revision",
+    status:"completed", date:"Jan–Feb 2024",
+    short:"Voter list updated. New voters can register via Form 6.",
+    detail:"The electoral roll is revised and updated. Citizens can apply for new voter registration using Form 6 on voters.eci.gov.in. Booth Level Officers visit homes to verify addresses. The last date to register is typically 30 days before polling day." },
+
+  { id:3, icon:"🏃", title:"Nomination Filing",
+    status:"completed", date:"March 2024",
+    short:"Candidates file nominations with security deposit.",
+    detail:"Candidates submit nomination papers to the Returning Officer of their constituency. They must pay a security deposit of ₹25,000 (₹12,500 for SC/ST candidates) and submit Form 26 — a sworn affidavit declaring all assets, liabilities, and criminal cases if any." },
+
+  { id:4, icon:"🔍", title:"Nomination Scrutiny",
+    status:"completed", date:"March 2024",
+    short:"Returning Officer verifies all nominations filed.",
+    detail:"The Returning Officer scrutinizes all nominations for legal validity. Nominations that do not meet requirements are rejected. After scrutiny, candidates have a 2-day window to withdraw their candidacy if they choose to do so." },
+
+  { id:5, icon:"📣", title:"Election Campaign",
+    status:"completed", date:"March–May 2024",
+    short:"Parties campaign across constituencies within rules.",
+    detail:"Political parties and candidates conduct public rallies, door-to-door campaigns, and media advertising. Strict rules apply — no appeals based on caste or religion, spending limit of ₹95 lakh per Lok Sabha candidate, and ECI monitors all activities." },
+
+  { id:6, icon:"🚫", title:"Campaign Silence Period",
+    status:"completed", date:"48 hrs before each polling date",
+    short:"All campaigning stops 48 hours before voting.",
+    detail:"A mandatory silence period of 48 hours begins before each polling phase. All public meetings, rallies, advertisements, and social media campaigning must stop completely. This gives voters time to make decisions free from campaign pressure." },
+
+  { id:7, icon:"🗳️", title:"Polling Day",
+    status:"current", date:"April 19 – June 1, 2024",
+    short:"Voters cast votes at booths using EVMs.",
+    detail:"Voters visit their assigned polling booth with valid ID (Voter ID, Aadhaar, Passport, PAN Card, Driving License, etc.). They press their candidate's button on the EVM and verify via VVPAT slip shown for 7 seconds. Indelible ink is applied to the left index finger. Polling hours: 7 AM to 6 PM." },
+
+  { id:8, icon:"🔢", title:"Vote Counting",
+    status:"upcoming", date:"June 4, 2024",
+    short:"EVMs unsealed and counted round by round.",
+    detail:"On counting day, EVMs are brought from secure storage under heavy security. Seals are broken in the presence of candidates and their agents. Votes are counted round by round for each constituency and results announced progressively." },
+
+  { id:9, icon:"📊", title:"Results Declaration",
+    status:"upcoming", date:"June 4, 2024",
+    short:"Winners receive certificates. Government formation begins.",
+    detail:"The Returning Officer declares the winning candidate and issues a Certificate of Election. The Election Commission publishes all results on results.eci.gov.in. The President of India invites the leader of the majority party or alliance to form the government." },
+
+  { id:10, icon:"🤝", title:"Oath & New Government",
+    status:"upcoming", date:"June 2024",
+    short:"New PM and Cabinet sworn in by the President.",
+    detail:"The President of India administers the oath of office to the new Prime Minister followed by Cabinet Ministers. The new government is officially formed and begins its 5-year term, typically announcing key priorities and a 100-day agenda." }
 ];
 
-export function renderTimeline() {
-    const container = document.getElementById('timeline-container');
-    const progressBar = document.getElementById('timeline-progress-bar');
-    
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    let completedCount = 0;
-    
-    TIMELINE_PHASES.forEach(phase => {
-        if (phase.status === 'completed') completedCount++;
-        
-        const phaseEl = document.createElement('div');
-        phaseEl.className = `timeline-item ${phase.status}`;
-        if (phase.status === 'current') phaseEl.style.borderLeft = '4px solid var(--secondary)';
-        if (phase.status === 'completed') phaseEl.style.opacity = '0.8';
+function renderTimeline() {
+  const container = document.getElementById('timeline-container');
+  if (!container || container.children.length > 0) return;
+  
+  const completed = PHASES.filter(p => p.status === 'completed').length;
+  
+  // Progress bar
+  document.getElementById('timeline-progress').style.width = 
+    (completed / PHASES.length * 100) + '%';
+  document.getElementById('timeline-progress-text').textContent = 
+    completed + ' of ' + PHASES.length + ' phases complete';
+  
+  PHASES.forEach(phase => {
+    const card = document.createElement('div');
+    card.className = 'phase-card ' + phase.status;
+    card.innerHTML = `
+      <div class="phase-icon">${phase.icon}</div>
+      <div class="phase-content">
+        <div class="phase-header" onclick="togglePhase(${phase.id})">
+          <div>
+            <h3>${phase.title}</h3>
+            <span class="phase-date">📅 ${phase.date}</span>
+          </div>
+          <span class="phase-status ${phase.status}">
+            ${phase.status === 'completed' ? '✅' : 
+              phase.status === 'current' ? '🔄 Current' : '🔜'}
+          </span>
+        </div>
+        <p class="phase-short">${phase.short}</p>
+        <div class="phase-detail" id="detail-${phase.id}" style="display:none">
+          <p>${phase.detail}</p>
+          <button class="ask-ai-btn" onclick="askAIAboutPhase('${phase.title}')">
+            Ask AI about this 🤖
+          </button>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
 
-        const statusBadge = {
-            'completed': '<span class="badge" style="background: var(--secondary);">completed ✅</span>',
-            'current': '<span class="badge" style="background: var(--primary);">current 🔄</span>',
-            'upcoming': '<span class="badge" style="background: var(--gray);">upcoming 🔜</span>'
-        }[phase.status];
+function togglePhase(id) {
+  const detail = document.getElementById('detail-' + id);
+  detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+}
 
-        phaseEl.innerHTML = `
-            <div class="timeline-marker">
-                <div class="timeline-dot" style="background: ${phase.status === 'completed' ? 'var(--secondary)' : (phase.status === 'current' ? 'var(--primary)' : 'var(--border)')}; border-color: ${phase.status === 'completed' ? 'var(--secondary)' : (phase.status === 'current' ? 'var(--primary-light)' : 'var(--border)')}"></div>
-                <div class="timeline-line"></div>
-            </div>
-            <div class="timeline-content" style="cursor: pointer; position: relative;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                    <div>
-                        <h3 style="margin: 0; font-size: 1.1rem;">${phase.icon} ${phase.title}</h3>
-                        <small style="color: var(--gray); font-weight: 500;">${phase.dateRange}</small>
-                    </div>
-                    ${statusBadge}
-                </div>
-                <p class="phase-short" style="margin-bottom: 0;">${phase.short}</p>
-                <div class="phase-detail hidden" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                    <p style="font-size: 0.95rem; color: var(--dark-lighter);">${phase.detail}</p>
-                    <button class="btn btn-outline ask-ai-btn" style="margin-top: 1rem; font-size: 0.85rem; padding: 0.5rem 1rem;">
-                        Ask AI about this →
-                    </button>
-                </div>
-            </div>
-        `;
-
-        const content = phaseEl.querySelector('.timeline-content');
-        const detail = phaseEl.querySelector('.phase-detail');
-        const askBtn = phaseEl.querySelector('.ask-ai-btn');
-
-        content.addEventListener('click', (e) => {
-            if (e.target === askBtn) return;
-            detail.classList.toggle('hidden');
-        });
-
-        askBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openChatTab(`Tell me more about the "${phase.title}" phase of the Indian election process.`);
-        });
-
-        container.appendChild(phaseEl);
-    });
-    
-    if (progressBar) {
-        progressBar.style.width = `${(completedCount / TIMELINE_PHASES.length) * 100}%`;
-    }
+function askAIAboutPhase(title) {
+  document.querySelector('[data-tab="assistant"]').click();
+  setTimeout(() => {
+    const input = document.getElementById('chat-input');
+    input.value = 'Explain the "' + title + '" phase of Indian elections in detail';
+    document.getElementById('send-btn').click();
+  }, 300);
 }

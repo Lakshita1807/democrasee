@@ -1,307 +1,164 @@
-import { state } from './app.js';
+const GEMINI_API_KEY = "PASTE_YOUR_KEY_HERE";
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
 let chatHistory = [];
-// Use sessionStorage to cache responses and avoid duplicate API calls
-const responseCache = JSON.parse(sessionStorage.getItem('democrasee_cache')) || {};
 
-export async function initChat() {
-    const chatForm = document.getElementById('chat-form');
-    const clearBtn = document.getElementById('clear-chat');
-    const micBtn = document.getElementById('mic-btn');
-    
-    // Add event listeners
-    if (chatForm) {
-        chatForm.addEventListener('submit', handleChatSubmit);
-    }
-    
-    if (clearBtn) {
-        clearBtn.addEventListener('click', clearChat);
-    }
-    
-    if (micBtn) {
-        setupVoiceInput(micBtn);
-    }
-}
+async function callGemini(messages) {
+    const cacheKey = messages[messages.length - 1].content;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) return cached;
 
-async function handleChatSubmit(e) {
-    e.preventDefault();
-    const input = document.getElementById('chat-input');
-    const submitBtn = document.querySelector('#chat-form button[type="submit"]');
-    const prompt = input.value.trim();
-    
-    if (!prompt) return;
+    const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            contents: messages.map(m => ({
+                role: m.role === 'ai' ? 'model' : 'user',
+                parts: [{ text: m.content }]
+            })),
+            generationConfig: { maxOutputTokens: 500, temperature: 0.7 }
+        })
+    });
 
-    // UI Updates: Disable input, clear text, show user message
-    input.value = '';
-    input.disabled = true;
-    submitBtn.disabled = true;
-    
-    appendMessage('user', prompt);
-    const typingIndicatorId = showTypingIndicator();
-
-    try {
-        const responseText = await fetchGeminiResponse(prompt);
-        removeTypingIndicator(typingIndicatorId);
-        
-        if (responseText) {
-            appendMessage('system', formatMarkdown(responseText));
-            chatHistory.push({ role: 'user', parts: [{ text: prompt }] });
-            chatHistory.push({ role: 'model', parts: [{ text: responseText }] });
-            
-            // Add Smart Suggestion Chips
-            generateSuggestionChips(responseText);
-        } else {
-            appendMessage('system', '<p class="error">Sorry, I encountered an error connecting to the AI. Please check your API key or try again later.</p>');
-        }
-    } catch (error) {
-        removeTypingIndicator(typingIndicatorId);
-        appendMessage('system', '<p class="error">An unexpected error occurred.</p>');
-        console.error(error);
-    } finally {
-        input.disabled = false;
-        submitBtn.disabled = false;
-        input.focus();
-    }
-}
-
-async function fetchGeminiResponse(prompt, forceJson = false) {
-    // Check Cache First
-    const cacheKey = `${state.language}_${state.role}_${state.region}_${prompt}_${forceJson}`;
-    if (responseCache[cacheKey]) {
-        return responseCache[cacheKey];
-    }
-
-    try {
-        const systemInstruction = `You are ElectionGuide, a friendly civic education assistant for Indian elections. 
-        Always respond in simple language. Never favor any political party or candidate. 
-        Break answers into numbered steps. Use emojis for dates (📅), steps (✅), and upcoming items (🔜). 
-        Keep responses under 200 words unless asked for more. 
-        Always end with a follow-up question. The user's region is ${state.region} and role is ${state.role}. 
-        Tailor your answer accordingly. Respond in this language code: ${state.language}`;
-
-        let contents = [];
-        if (chatHistory.length > 0) {
-            contents = [...chatHistory, { role: 'user', parts: [{ text: prompt }] }];
-        } else {
-            contents = [{ role: 'user', parts: [{ text: prompt }] }];
-        }
-
-        const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                prompt,
-                contents,
-                systemInstruction,
-                forceJson
-            })
-        });
-
-        if (!response.ok) {
-            if (response.status === 429) {
-                 return "Rate limit exceeded. Please wait a few seconds and try again. ⏳";
-            }
-            throw new Error(`API Error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const responseText = data.candidates[0].content.parts[0].text;
-        
-        // Save to cache
-        responseCache[cacheKey] = responseText;
-        sessionStorage.setItem('democrasee_cache', JSON.stringify(responseCache));
-        
-        return responseText;
-    } catch (error) {
+    if (!response.ok) {
+        const error = await response.json();
         console.error("Gemini API Error:", error);
-        return null;
+        return "I'm having trouble connecting to my brain right now. Please check the API key in public/gemini.js!";
     }
+
+    const data = await response.json();
+    const text = data.candidates[0].content.parts[0].text;
+    sessionStorage.setItem(cacheKey, text);
+    return text;
 }
 
-// Reusable function for other modules (Timeline, Quizzes) to call Gemini directly
-export async function callGeminiDirectly(prompt, forceJson = false) {
-    return await fetchGeminiResponse(prompt, forceJson);
-}
-
-function appendMessage(sender, htmlContent) {
-    const history = document.getElementById('chat-history');
+function appendMessage(role, text) {
+    const container = document.getElementById('chat-messages');
     const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${sender}`;
+    msgDiv.className = `message ${role}`;
+    msgDiv.textContent = text;
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
     
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'message-content';
-    contentDiv.innerHTML = htmlContent;
-    
-    msgDiv.appendChild(contentDiv);
-    history.appendChild(msgDiv);
-    
-    // Smooth scroll to bottom
-    history.scrollTop = history.scrollHeight;
+    chatHistory.push({ role, content: text });
 }
 
-function showTypingIndicator() {
-    const history = document.getElementById('chat-history');
-    const id = 'typing-' + Date.now();
+async function sendMessage(text) {
+    if (!text) return;
     
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message system`;
-    msgDiv.id = id;
+    appendMessage('user', text);
+    document.getElementById('chat-input').value = '';
     
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'message-content typing-indicator';
-    contentDiv.innerHTML = `
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-    `;
+    const indicator = document.getElementById('typing-indicator');
+    indicator.classList.remove('hidden');
     
-    msgDiv.appendChild(contentDiv);
-    history.appendChild(msgDiv);
-    history.scrollTop = history.scrollHeight;
+    const region = localStorage.getItem('userRegion') || 'India';
+    const role = localStorage.getItem('userRole') || 'Citizen';
     
-    return id;
+    const systemPrompt = `You are ElectionGuide, a friendly civic education assistant for Indian elections. Rules:
+1. NEVER favor any political party or candidate. Stay strictly neutral.
+2. Use simple, easy language suitable for a ${role}.
+3. Break answers into numbered steps or bullet points.
+4. Use emojis: 📅 dates, ✅ completed, 🔜 upcoming, 🗳️ voting.
+5. Keep responses under 200 words unless more detail is requested.
+6. Always end with one follow-up question.
+7. User region: ${region}, User role: ${role}.
+8. Current context: We are in the 2024 election cycle.`;
+
+    const messages = [
+        { role: 'user', content: systemPrompt },
+        ...chatHistory.slice(-5) // Keep last 5 messages for context
+    ];
+
+    const aiResponse = await callGemini(messages);
+    indicator.classList.add('hidden');
+    appendMessage('ai', aiResponse);
+    
+    generateChips(aiResponse);
 }
 
-function removeTypingIndicator(id) {
-    const indicator = document.getElementById(id);
-    if (indicator) {
-        indicator.remove();
+function generateChips(responseText) {
+    const container = document.getElementById('suggestion-chips');
+    container.innerHTML = '';
+    
+    // Simple logic to generate relevant follow-ups
+    let topics = ["🗳️ How to Vote", "📝 Registration", "📅 Key Dates"];
+    if (responseText.toLowerCase().includes('id') || responseText.toLowerCase().includes('document')) {
+        topics = ["🪪 Required IDs", "📍 Find Booth", "🔍 Check Name"];
+    } else if (responseText.toLowerCase().includes('evm') || responseText.toLowerCase().includes('vvpat')) {
+        topics = ["🤖 How EVM works", "🔒 Security", "📊 Counting"];
     }
-}
-
-function clearChat() {
-    const history = document.getElementById('chat-history');
-    history.innerHTML = `
-        <div class="message system">
-            <div class="message-content">
-                Chat cleared. How else can I help you understand the election process?
-            </div>
-        </div>
-    `;
-    chatHistory = [];
-    document.getElementById('suggestion-chips').innerHTML = '';
-}
-
-async function generateSuggestionChips(lastResponse) {
-    const chipsContainer = document.getElementById('suggestion-chips');
-    chipsContainer.innerHTML = ''; // Clear old chips
     
-    const prompt = `Based on this previous answer: "${lastResponse.substring(0, 100)}...", generate exactly 3 short, relevant follow-up questions the user might ask next. 
-    Make them brief (under 6 words each) and include a relevant emoji at the end of each.
-    Return strictly a JSON array of 3 strings. Example: ["What documents do I need? 📄", "What's the deadline? 📅", "How to check status? 🔍"]`;
-    
-    try {
-        let jsonStr = await fetchGeminiResponse(prompt, true);
-        if (jsonStr) {
-             jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
-             const chipsArray = JSON.parse(jsonStr);
-             if (Array.isArray(chipsArray) && chipsArray.length === 3) {
-                 renderChips(chipsArray);
-             }
-        }
-    } catch(e) {
-        console.error("Failed to generate chips", e);
-    }
-}
-
-function renderChips(chipsArray) {
-    const chipsContainer = document.getElementById('suggestion-chips');
-    chipsContainer.innerHTML = '';
-    
-    chipsArray.forEach(text => {
-        const btn = document.createElement('button');
-        btn.className = 'suggestion-chip';
-        btn.textContent = text;
-        btn.addEventListener('click', () => {
-            const input = document.getElementById('chat-input');
-            input.value = text;
-            document.querySelector('#chat-form button[type="submit"]').click();
-            chipsContainer.innerHTML = ''; // Hide chips once clicked
-        });
-        chipsContainer.appendChild(btn);
+    topics.forEach(topic => {
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        chip.textContent = topic;
+        chip.onclick = () => sendMessage(topic);
+        container.appendChild(chip);
     });
 }
 
-function setupVoiceInput(micBtn) {
-    // Check if browser supports speech recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+function initChat() {
+    const container = document.getElementById('chat-messages');
+    if (container.children.length > 0) return;
     
-    if (!SpeechRecognition) {
-        micBtn.style.display = 'none';
-        return;
+    const welcome = `Namaste! 🙏 I'm your ElectionGuide. How can I help you participate in Indian democracy today? You can ask me about registration, voting process, or election dates in ${localStorage.getItem('userRegion') || 'India'}.`;
+    appendMessage('ai', welcome);
+    
+    const quickTopics = ["🗳️ How to Vote", "📝 How to Register", "📅 Election Timeline", "⚖️ Voter Rights", "🏛️ How Parliament Works", "📊 How Votes are Counted"];
+    generateChips(welcome);
+    
+    // Override chips for welcome
+    const chipsContainer = document.getElementById('suggestion-chips');
+    chipsContainer.innerHTML = '';
+    quickTopics.forEach(topic => {
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        chip.textContent = topic;
+        chip.onclick = () => sendMessage(topic);
+        chipsContainer.appendChild(chip);
+    });
+}
+
+// Event Listeners
+document.getElementById('send-btn').addEventListener('click', () => {
+    sendMessage(document.getElementById('chat-input').value);
+});
+
+document.getElementById('chat-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage(e.target.value);
+});
+
+document.getElementById('clear-chat').addEventListener('click', () => {
+    if (confirm('Clear entire conversation?')) {
+        document.getElementById('chat-messages').innerHTML = '';
+        chatHistory = [];
+        initChat();
     }
-    
-    const recognition = new SpeechRecognition();
+});
+
+// Voice Input
+const micBtn = document.getElementById('mic-btn');
+if ('webkitSpeechRecognition' in window) {
+    const recognition = new webkitSpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
     
-    // Set language based on selected UI language
-    const langMap = {
-        'en': 'en-IN',
-        'hi': 'hi-IN',
-        'ta': 'ta-IN',
-        'bn': 'bn-IN'
+    micBtn.onclick = () => {
+        recognition.start();
+        micBtn.textContent = '🛑';
     };
-    
-    micBtn.addEventListener('click', () => {
-        recognition.lang = langMap[state.language] || 'en-IN';
-        
-        micBtn.classList.add('btn-primary');
-        micBtn.classList.remove('btn-outline');
-        micBtn.innerHTML = '<i class="fa-solid fa-microphone-lines fa-fade"></i>';
-        
-        try {
-            recognition.start();
-        } catch(e) {
-            console.error("Speech recognition already started");
-        }
-    });
     
     recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        const input = document.getElementById('chat-input');
-        input.value = transcript;
-        
-        // Auto submit
-        setTimeout(() => {
-            document.querySelector('#chat-form button[type="submit"]').click();
-        }, 500);
+        const text = event.results[0][0].transcript;
+        document.getElementById('chat-input').value = text;
+        micBtn.textContent = '🎤';
+        sendMessage(text);
     };
     
-    recognition.onspeechend = () => {
-        recognition.stop();
-        resetMicBtn(micBtn);
+    recognition.onerror = () => {
+        micBtn.textContent = '🎤';
     };
-    
-    recognition.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
-        resetMicBtn(micBtn);
-    };
-}
-
-function resetMicBtn(micBtn) {
-    micBtn.classList.remove('btn-primary');
-    micBtn.classList.add('btn-outline');
-    micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
-}
-
-function formatMarkdown(text) {
-    if (!text) return '';
-    let html = text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    html = html.replace(/^### (.*$)/gim, '<h4>$1</h4>');
-    html = html.replace(/^## (.*$)/gim, '<h3>$1</h3>');
-    html = html.replace(/^\* (.*$)/gim, '<ul><li>$1</li></ul>');
-    html = html.replace(/^\d+\.\s+(.*$)/gim, '<ol><li>$1</li></ol>');
-    html = html.replace(/<\/ul>\n<ul>/g, '\n');
-    html = html.replace(/<\/ol>\n<ol>/g, '\n');
-    html = html.replace(/\n/g, '<br>');
-    return html;
+} else {
+    micBtn.style.display = 'none';
 }
