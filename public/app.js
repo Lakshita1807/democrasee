@@ -60,7 +60,74 @@ document.addEventListener('DOMContentLoaded', () => {
             sidebar.classList.remove('open');
         }
     });
+
+    // Theme Toggle
+    const themeBtn = document.getElementById('theme-toggle');
+    const themeCheckbox = document.getElementById('theme-checkbox');
+    
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        if (themeBtn) themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+        if (themeCheckbox) themeCheckbox.checked = theme === 'dark';
+    }
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(savedTheme);
+
+    themeBtn?.addEventListener('click', () => {
+        const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(newTheme);
+    });
+
+    themeCheckbox?.addEventListener('change', (e) => {
+        applyTheme(e.target.checked ? 'dark' : 'light');
+    });
+
+    // Accessibility Toggle
+    const accBtn = document.getElementById('acc-toggle');
+    if (accBtn) {
+        if (localStorage.getItem('accessibilityMode') === 'true') {
+            document.body.classList.add('accessibility-mode');
+        }
+        accBtn.addEventListener('click', () => {
+            const active = document.body.classList.toggle('accessibility-mode');
+            localStorage.setItem('accessibilityMode', active);
+        });
+    }
+
+    // Share Button
+    const shareBtn = document.getElementById('share-btn');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const text = "Learn about Indian elections with DemocraSee! https://democrasee-142760811225.us-central1.run.app #BuildwithAI #PromptWarsVirtual";
+            navigator.clipboard.writeText(text).then(() => {
+                shareBtn.classList.add('copied');
+                setTimeout(() => shareBtn.classList.remove('copied'), 2000);
+            });
+        });
+    }
+
+    // Initial Dashboard Update
+    updateDashboard();
 });
+
+function updateDashboard() {
+    const flashcards = JSON.parse(localStorage.getItem('masteredFlashcards') || '[]');
+    const quizScore = localStorage.getItem('quizBestScore') || '0';
+    const questions = localStorage.getItem('stats_questions') || '0';
+    
+    // Calculate Days Active
+    const firstVisit = localStorage.getItem('firstVisitDate') || new Date().toISOString();
+    if (!localStorage.getItem('firstVisitDate')) localStorage.setItem('firstVisitDate', firstVisit);
+    const diff = Math.floor((new Date() - new Date(firstVisit)) / (1000 * 60 * 60 * 24)) + 1;
+
+    document.getElementById('stat-flashcards').textContent = `${flashcards.length}/25`;
+    document.getElementById('stat-quiz').textContent = `${quizScore}/10`;
+    document.getElementById('stat-questions').textContent = questions;
+}
+window.updateDashboard = updateDashboard;
 
 function showApp(region, role) {
     document.getElementById('onboarding-modal').classList.add('hidden');
@@ -76,11 +143,28 @@ function updateBadges(region, role) {
 }
 
 function initTab(tab) {
-    if (tab === 'assistant') initChat();
-    if (tab === 'timeline') renderTimeline();
-    if (tab === 'flashcards') initFlashcards();
-    if (tab === 'charts') initCharts();
-    if (tab === 'eligibility') initEligibility();
-    if (tab === 'quiz') initQuiz();
-    if (tab === 'multilingual') initMultilingual();
+    const container = document.getElementById(`tab-${tab}`);
+    try {
+        if (tab === 'assistant') initChat();
+        if (tab === 'timeline') renderTimeline();
+        if (tab === 'news') initNews();
+        if (tab === 'flashcards') initFlashcards();
+        if (tab === 'charts') initCharts();
+        if (tab === 'eligibility') initEligibility();
+        if (tab === 'quiz') initQuiz();
+        if (tab === 'multilingual') initMultilingual();
+        if (tab === 'helpline') initHelpline();
+        if (tab === 'voter-id') initVoterID();
+    } catch (error) {
+        console.error(`Error loading tab ${tab}:`, error);
+        if (container) {
+            container.innerHTML = `
+                <div class="error-boundary">
+                    <h3>Oops! Something went wrong</h3>
+                    <p>We couldn't load this section. Please try refreshing the page.</p>
+                    <button class="btn-primary" onclick="location.reload()">Refresh Page</button>
+                </div>
+            `;
+        }
+    }
 }

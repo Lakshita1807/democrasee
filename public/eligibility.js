@@ -30,6 +30,10 @@ function eligResult(type) {
     
     result.classList.remove('hidden');
     docs.classList.remove('hidden');
+    
+    // Clear previous buttons
+    const oldActions = result.querySelector('.elig-actions-vertical');
+    if (oldActions) oldActions.remove();
 
     if (type === 'eligible-reg') {
         icon.textContent = '✅';
@@ -53,6 +57,20 @@ function eligResult(type) {
         title.textContent = 'Not Eligible';
         desc.textContent = 'Only citizens of India are eligible to vote in Indian elections.';
         docs.classList.add('hidden');
+    }
+    if (type.startsWith('eligible') || type === 'unsure') {
+        const actionArea = document.createElement('div');
+        actionArea.className = 'elig-actions-vertical';
+        actionArea.style.display = 'flex';
+        actionArea.style.flexDirection = 'column';
+        actionArea.style.gap = '10px';
+        actionArea.style.marginTop = '20px';
+        
+        actionArea.innerHTML = `
+            <a href="https://electoralsearch.eci.gov.in/" target="_blank" class="btn-primary" style="text-decoration:none">Find My Polling Booth 🗺️</a>
+            <a href="https://voters.eci.gov.in/" target="_blank" class="btn-accent" style="text-decoration:none">Download Voter ID 📄</a>
+        `;
+        result.appendChild(actionArea);
     }
 }
 

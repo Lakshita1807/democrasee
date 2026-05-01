@@ -11,7 +11,9 @@ const TRANSLATIONS = {
     quiz: "Master Election Quiz",
     askQuestion: "Ask a question...",
     clearChat: "Clear Chat",
-    sendBtn: "Send"
+    sendBtn: "Send",
+    helpline: "Helpline Numbers",
+    voterService: "Voter ID Service"
   },
   HI: {
     welcome: "डेमोक्रासी में आपका स्वागत है",
@@ -25,7 +27,9 @@ const TRANSLATIONS = {
     quiz: "मास्टर चुनाव प्रश्नोत्तरी",
     askQuestion: "प्रश्न पूछें...",
     clearChat: "चैट साफ़ करें",
-    sendBtn: "भेजें"
+    sendBtn: "भेजें",
+    helpline: "हेल्पलाइन नंबर",
+    voterService: "वोटर आईडी सेवा"
   },
   TA: {
     welcome: "டெமோக்ராசியில் வரவேற்கிறோம்",
@@ -39,7 +43,9 @@ const TRANSLATIONS = {
     quiz: "முதன்மை தேர்தல் வினாடிவினா",
     askQuestion: "கேள்வி கேளுங்கள்...",
     clearChat: "அரட்டையை அழி",
-    sendBtn: "அனுப்பு"
+    sendBtn: "அனுப்பு",
+    helpline: "உதவி எண்கள்",
+    voterService: "வாக்காளர் அடையாள சேவை"
   },
   BN: {
     welcome: "ডেমোক্রাসিতে স্বাগতম",
@@ -53,7 +59,9 @@ const TRANSLATIONS = {
     quiz: "মাস্টার নির্বাচন কুইজ",
     askQuestion: "প্রশ্ন জিজ্ঞাসা করুন...",
     clearChat: "চ্যাট পরিষ্কার করুন",
-    sendBtn: "পাঠান"
+    sendBtn: "পাঠান",
+    helpline: "হেল্পলাইন নম্বর",
+    voterService: "ভোটার আইডি পরিষেবা"
   }
 };
 

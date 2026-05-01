@@ -1,6 +1,19 @@
 function initCharts() {
-  google.charts.load('current', {packages:['corechart']});
-  google.charts.setOnLoadCallback(() => showChart('seats'));
+  if (typeof google === 'undefined' || typeof google.charts === 'undefined') {
+    showGlobalLoader(true);
+    const script = document.createElement('script');
+    script.src = 'https://www.gstatic.com/charts/loader.js';
+    script.onload = () => {
+      google.charts.load('current', {packages:['corechart']});
+      google.charts.setOnLoadCallback(() => {
+        showGlobalLoader(false);
+        showChart('seats');
+      });
+    };
+    document.head.appendChild(script);
+  } else {
+    showChart('seats');
+  }
 }
 
 function showChart(type) {

@@ -118,6 +118,14 @@ function selectAnswer(chosen) {
 function showResults() {
   const badge = score >= 9 ? '🥇 Election Expert!' :
                 score >= 6 ? '🥈 Civic Scholar!' : '🥉 Keep Learning!';
+  
+  // Save Best Score
+  const best = parseInt(localStorage.getItem('quizBestScore') || '0');
+  if (score > best) {
+    localStorage.setItem('quizBestScore', score);
+    if (window.updateDashboard) window.updateDashboard();
+  }
+
   document.getElementById('tab-quiz').innerHTML = `
     <div class="quiz-results">
       <div class="quiz-icon">🏆</div>

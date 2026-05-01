@@ -27,13 +27,37 @@ const FLASHCARDS = [
 ];
 
 let currentCard = 0;
-let mastered = [];
+let mastered = JSON.parse(localStorage.getItem('masteredFlashcards') || '[]');
 let deck = [...FLASHCARDS];
 let flipped = false;
 
 function initFlashcards() {
   const container = document.getElementById('flashcard');
   if (!container) return;
+  
+  // Touch Swiping Support
+  let touchStartX = 0;
+  let touchEndX = 0;
+  
+  container.addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].screenX;
+  }, {passive: true});
+
+  container.addEventListener('touchend', e => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+  }, {passive: true});
+
+  function handleSwipe() {
+    const threshold = 50;
+    if (touchEndX < touchStartX - threshold) {
+      nextCard(); // Swipe Left
+    }
+    if (touchEndX > touchStartX + threshold) {
+      prevCard(); // Swipe Right
+    }
+  }
+
   renderCard();
   updateCounter();
 }
@@ -55,6 +79,8 @@ function flipCard() {
 function gotIt() {
   if (!mastered.includes(deck[currentCard].term)) {
     mastered.push(deck[currentCard].term);
+    localStorage.setItem('masteredFlashcards', JSON.stringify(mastered));
+    if (window.updateDashboard) window.updateDashboard();
   }
   nextCard();
   updateCounter();

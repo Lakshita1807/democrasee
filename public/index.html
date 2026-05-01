@@ -8,11 +8,34 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
-    <!-- Google Charts -->
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <!-- Google Charts (Lazy loaded via charts.js) -->
+    <!-- <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script> -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- Global Loading Spinner -->
+    <div id="global-loader" class="loader-overlay hidden">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Fixed Header Ticker -->
+    <div class="news-ticker-container">
+        <div class="ticker-move">
+            <span>🗳️ 96.8 Crore registered voters in India 2024</span>
+            <span>📊 66.3% national voter turnout in 2024</span>
+            <span>🏆 543 Lok Sabha seats contested</span>
+            <span>👩 74 women elected to Lok Sabha in 2024</span>
+            <span>📅 7 phases of polling in 2024</span>
+            <span>🖊️ Indelible ink used since 1962</span>
+            <span>🤖 EVM introduced nationally in 2004</span>
+            <!-- Duplicate for seamless loop -->
+            <span>🗳️ 96.8 Crore registered voters in India 2024</span>
+            <span>📊 66.3% national voter turnout in 2024</span>
+            <span>🏆 543 Lok Sabha seats contested</span>
+        </div>
+    </div>
 
     <!-- Onboarding Modal -->
     <div id="onboarding-modal" class="modal-overlay">
@@ -104,6 +127,22 @@
                     <span id="region-badge" class="badge badge-region">📍 India</span>
                     <span id="role-badge" class="badge badge-role">👤 Voter</span>
                 </div>
+                
+                <div id="progress-card" class="progress-card">
+                    <h4>YOUR PROGRESS</h4>
+                    <div class="stat-row">
+                        <span>🃏 Mastered:</span>
+                        <span id="stat-flashcards">0/25</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>🎓 Quiz Score:</span>
+                        <span id="stat-quiz">0/10</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>💬 Questions:</span>
+                        <span id="stat-questions">0</span>
+                    </div>
+                </div>
             </div>
             
             <nav class="nav-menu">
@@ -114,6 +153,10 @@
                 <a href="#" class="nav-item" data-tab="timeline">
                     <span class="nav-icon">📅</span>
                     <span data-i18n="timeline">Election Timeline</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="news">
+                    <span class="nav-icon">📰</span>
+                    <span>Current News</span>
                 </a>
                 <a href="#" class="nav-item" data-tab="flashcards">
                     <span class="nav-icon">🃏</span>
@@ -131,12 +174,36 @@
                     <span class="nav-icon">🌍</span>
                     <span>Languages</span>
                 </a>
+                <a href="#" class="nav-item" data-tab="helpline">
+                    <span class="nav-icon">☎️</span>
+                    <span data-i18n="helpline">Helpline Numbers</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="voter-id">
+                    <span class="nav-icon">🆔</span>
+                    <span data-i18n="voterService">Voter ID Service</span>
+                </a>
                 
                 <div class="nav-section">ESSENTIAL QUIZZES</div>
                 <a href="#" class="nav-item" data-tab="quiz">
                     <span class="nav-icon">🎓</span>
                     <span data-i18n="quiz">Master Election Quiz</span>
                 </a>
+                
+                <div class="nav-section">COMMUNITY</div>
+                <a href="#" id="share-btn" class="nav-item">
+                    <span class="nav-icon">📤</span>
+                    <span>Share DemocraSee</span>
+                </a>
+
+                <div class="nav-section">SETTINGS</div>
+                <div class="nav-item theme-switch-item">
+                    <span class="nav-icon">🌓</span>
+                    <span>Dark Mode</span>
+                    <label class="switch">
+                        <input type="checkbox" id="theme-checkbox">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
             </nav>
         </aside>
 
@@ -144,7 +211,13 @@
             <header class="mobile-header">
                 <button id="hamburger" class="hamburger">☰</button>
                 <div class="mobile-logo">DemocraSee ☑️</div>
+                <div class="header-actions">
+                    <button id="theme-toggle" class="icon-btn" title="Toggle Dark Mode">🌙</button>
+                    <button id="acc-toggle" class="icon-btn" title="Accessibility Mode">♿</button>
+                </div>
             </header>
+            
+
 
             <!-- Tab Panels -->
             <section id="tab-assistant" class="tab-panel active">
@@ -159,7 +232,8 @@
                     <div class="chat-input-area">
                         <button id="clear-chat" class="icon-btn" title="Clear Chat">🗑️</button>
                         <input type="text" id="chat-input" placeholder="Ask a question..." data-i18n-placeholder="askQuestion">
-                        <button id="mic-btn" class="icon-btn">🎤</button>
+                        <button id="mic-btn" class="icon-btn" title="Voice Input">🎤</button>
+                        <button id="save-chat" class="icon-btn" title="Save Chat">💾</button>
                         <button id="send-btn" class="btn-primary" data-i18n="sendBtn">Send</button>
                     </div>
                 </div>
@@ -174,6 +248,16 @@
                     </div>
                 </div>
                 <div id="timeline-container" class="timeline-container"></div>
+            </section>
+
+            <section id="tab-news" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Current Election News</h2>
+                    <p>Stay updated with the latest happenings in Indian elections</p>
+                </div>
+                <div id="news-container" class="news-container">
+                    <!-- News cards will be injected here -->
+                </div>
             </section>
 
             <section id="tab-flashcards" class="tab-panel">
@@ -201,8 +285,8 @@
                         <button onclick="gotIt()" class="btn-accent">Got It! ✅</button>
                         <button onclick="reviewAgain()" class="btn-secondary">Review Again 🔄</button>
                         <button onclick="nextCard()" class="btn-secondary">Next ➡️</button>
+                        <button onclick="shuffleDeck()" class="btn-secondary">🔀 Shuffle</button>
                     </div>
-                    <button onclick="shuffleDeck()" class="btn-text">🔀 Shuffle Deck</button>
                 </div>
             </section>
 
@@ -306,6 +390,26 @@
             <section id="tab-quiz" class="tab-panel">
                 <!-- Quiz content will be injected by quiz.js -->
             </section>
+
+            <section id="tab-helpline" class="tab-panel">
+                <div class="panel-header">
+                    <h2 data-i18n="helpline">Helpline Numbers</h2>
+                    <p>Get immediate assistance for your election queries</p>
+                </div>
+                <div id="helpline-container" class="helpline-grid">
+                    <!-- Helpline cards will be injected by helpline.js -->
+                </div>
+            </section>
+
+            <section id="tab-voter-id" class="tab-panel">
+                <div class="panel-header">
+                    <h2 data-i18n="voterService">Voter ID Service</h2>
+                    <p>Link Aadhaar to simplify your Voter ID registration</p>
+                </div>
+                <div id="voter-id-flow" class="voter-id-flow">
+                    <!-- Flow content will be injected by voterid.js -->
+                </div>
+            </section>
         </main>
     </div>
 
@@ -316,7 +420,10 @@
     <script src="flashcards.js"></script>
     <script src="quiz.js"></script>
     <script src="charts.js"></script>
+    <script src="news.js"></script>
     <script src="eligibility.js"></script>
+    <script src="helpline.js"></script>
+    <script src="voterid.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
