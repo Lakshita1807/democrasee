@@ -182,6 +182,10 @@
                     <span class="nav-icon">🆔</span>
                     <span data-i18n="voterService">Voter ID Service</span>
                 </a>
+                <a href="#" class="nav-item" data-tab="parties">
+                    <span class="nav-icon">🗳️</span>
+                    <span data-i18n="parties">Political Parties</span>
+                </a>
                 
                 <div class="nav-section">ESSENTIAL QUIZZES</div>
                 <a href="#" class="nav-item" data-tab="quiz">
@@ -208,12 +212,33 @@
         </aside>
 
         <main class="main-content">
-            <header class="mobile-header">
-                <button id="hamburger" class="hamburger">☰</button>
-                <div class="mobile-logo">DemocraSee ☑️</div>
-                <div class="header-actions">
-                    <button id="theme-toggle" class="icon-btn" title="Toggle Dark Mode">🌙</button>
-                    <button id="acc-toggle" class="icon-btn" title="Accessibility Mode">♿</button>
+            <header class="app-header">
+                <div class="header-left">
+                    <button id="hamburger" class="hamburger" style="display: none;">☰</button>
+                    <div class="header-search">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" placeholder="Search for candidates, news, or rules...">
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="mode-toggle-group">
+                        <span class="mode-label">DARK</span>
+                        <label class="switch">
+                            <input type="checkbox" id="theme-checkbox-header">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="mode-toggle-group">
+                        <span class="mode-label">ACCESSIBLE</span>
+                        <button id="acc-toggle-header" class="icon-btn" title="Toggle Accessibility Mode">♿</button>
+                    </div>
+                    <div class="mode-toggle-group">
+                        <span class="mode-label">SPEAKER</span>
+                        <button id="speaker-toggle" class="icon-btn" title="Read Aloud Content">🔊</button>
+                    </div>
+                    <div id="live-indicator" class="badge badge-region">
+                        <span class="pulse-dot"></span> LIVE UPDATES
+                    </div>
                 </div>
             </header>
             
@@ -410,6 +435,16 @@
                     <!-- Flow content will be injected by voterid.js -->
                 </div>
             </section>
+
+            <section id="tab-parties" class="tab-panel">
+                <div class="panel-header">
+                    <h2 data-i18n="parties">Political Parties</h2>
+                    <p>Learn about major parties, their symbols, and ideologies</p>
+                </div>
+                <div id="parties-container" class="parties-grid">
+                    <!-- Party cards will be injected by parties.js -->
+                </div>
+            </section>
         </main>
     </div>
 
@@ -424,6 +459,8 @@
     <script src="eligibility.js"></script>
     <script src="helpline.js"></script>
     <script src="voterid.js"></script>
+    <script src="parties.js"></script>
+    <script src="speaker.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

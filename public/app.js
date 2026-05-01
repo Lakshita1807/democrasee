@@ -68,8 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
+        const headerThemeCheckbox = document.getElementById('theme-checkbox-header');
         if (themeBtn) themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
         if (themeCheckbox) themeCheckbox.checked = theme === 'dark';
+        if (headerThemeCheckbox) headerThemeCheckbox.checked = theme === 'dark';
     }
 
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -84,17 +86,26 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(e.target.checked ? 'dark' : 'light');
     });
 
+    const headerThemeCheckbox = document.getElementById('theme-checkbox-header');
+    headerThemeCheckbox?.addEventListener('change', (e) => {
+        applyTheme(e.target.checked ? 'dark' : 'light');
+    });
+
     // Accessibility Toggle
     const accBtn = document.getElementById('acc-toggle');
-    if (accBtn) {
-        if (localStorage.getItem('accessibilityMode') === 'true') {
-            document.body.classList.add('accessibility-mode');
-        }
-        accBtn.addEventListener('click', () => {
-            const active = document.body.classList.toggle('accessibility-mode');
-            localStorage.setItem('accessibilityMode', active);
-        });
+    const headerAccBtn = document.getElementById('acc-toggle-header');
+    
+    function toggleAccessibility() {
+        const active = document.body.classList.toggle('accessibility-mode');
+        localStorage.setItem('accessibilityMode', active);
     }
+
+    if (localStorage.getItem('accessibilityMode') === 'true') {
+        document.body.classList.add('accessibility-mode');
+    }
+
+    accBtn?.addEventListener('click', toggleAccessibility);
+    headerAccBtn?.addEventListener('click', toggleAccessibility);
 
     // Share Button
     const shareBtn = document.getElementById('share-btn');
@@ -155,6 +166,7 @@ function initTab(tab) {
         if (tab === 'multilingual') initMultilingual();
         if (tab === 'helpline') initHelpline();
         if (tab === 'voter-id') initVoterID();
+        if (tab === 'parties') initParties();
     } catch (error) {
         console.error(`Error loading tab ${tab}:`, error);
         if (container) {

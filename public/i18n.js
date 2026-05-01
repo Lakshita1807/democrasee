@@ -13,7 +13,8 @@ const TRANSLATIONS = {
     clearChat: "Clear Chat",
     sendBtn: "Send",
     helpline: "Helpline Numbers",
-    voterService: "Voter ID Service"
+    voterService: "Voter ID Service",
+    parties: "Political Parties"
   },
   HI: {
     welcome: "डेमोक्रासी में आपका स्वागत है",
@@ -29,7 +30,8 @@ const TRANSLATIONS = {
     clearChat: "चैट साफ़ करें",
     sendBtn: "भेजें",
     helpline: "हेल्पलाइन नंबर",
-    voterService: "वोटर आईडी सेवा"
+    voterService: "वोटर आईडी सेवा",
+    parties: "राजनीतिक दल"
   },
   TA: {
     welcome: "டெமோக்ராசியில் வரவேற்கிறோம்",
@@ -45,7 +47,8 @@ const TRANSLATIONS = {
     clearChat: "அரட்டையை அழி",
     sendBtn: "அனுப்பு",
     helpline: "உதவி எண்கள்",
-    voterService: "வாக்காளர் அடையாள சேவை"
+    voterService: "வாக்காளர் அடையாள சேவை",
+    parties: "அரசியல் கட்சிகள்"
   },
   BN: {
     welcome: "ডেমোক্রাসিতে স্বাগতম",
@@ -61,7 +64,8 @@ const TRANSLATIONS = {
     clearChat: "চ্যাট পরিষ্কার করুন",
     sendBtn: "পাঠান",
     helpline: "হেল্পলাইন নম্বর",
-    voterService: "ভোটার আইডি পরিষেবা"
+    voterService: "ভোটার আইডি পরিষেবা",
+    parties: "রাজনৈতিক দল"
   }
 };
 
