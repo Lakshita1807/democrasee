@@ -1,4 +1,4 @@
 export const CONFIG = {
-    // Replace this with your actual Gemini API Key
-    GEMINI_API_KEY: "demo"
+    // API Key is now handled securely on the server
+    GEMINI_API_KEY: ""
 };

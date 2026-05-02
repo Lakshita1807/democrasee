@@ -98,3 +98,7 @@ function setLanguage(lang) {
 function initMultilingual() {
     // Current setup handles language switching via setLanguage directly
 }
+
+// Global exposure
+window.setLanguage = setLanguage;
+window.initMultilingual = initMultilingual;

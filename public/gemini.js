@@ -1,5 +1,4 @@
-const GEMINI_API_KEY = "AIzaSyBZmvfC3JUSvIqtEH6k5_ixI--lblQWu4A";
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
+// API configurations are now handled by the backend for security
 
 let lastRequestTime = 0;
 const REQUEST_COOLDOWN = 2000; // 2 seconds
@@ -115,22 +114,14 @@ Rules:
 
 User question: ${userMessage}`;
 
-    const response = await fetch(
-      `${GEMINI_URL}?key=${GEMINI_API_KEY}`,
-      {
+    const customKey = localStorage.getItem('democrasee_key');
+
+    const response = await fetch('/api/chat', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: prompt }]
-            }
-          ],
-          generationConfig: {
-            maxOutputTokens: 1000,
-            temperature: 0.7
-          }
+          prompt: prompt,
+          apiKey: customKey
         })
       }
     );
@@ -240,3 +231,16 @@ document.getElementById('clear-chat')?.addEventListener('click', () => {
         initChat();
     }
 });
+
+// Global exposure
+window.initChat = initChat;
+window.callGemini = callGemini;
+window.sendMessage = sendMessage;
+window.sanitizeInput = sanitizeInput;
+window.showGlobalLoader = showGlobalLoader;
+window.toggleListening = toggleListening;
+window.startListening = startListening;
+window.stopListening = stopListening;
+window.exportChat = exportChat;
+window.generateChips = generateChips;
+window.appendMessage = appendMessage;

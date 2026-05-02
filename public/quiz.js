@@ -1,3 +1,19 @@
+export function scoreQuiz(userAnswers, correctAnswers) {
+  if (!userAnswers || !correctAnswers) return 0;
+  let score = 0;
+  const len = Math.min(userAnswers.length, correctAnswers.length);
+  for (let i = 0; i < len; i++) {
+    if (userAnswers[i] === correctAnswers[i]) {
+      score++;
+    }
+  }
+  return score;
+}
+
+export function initQuiz() {
+  showQuizStart();
+}
+
 const QUESTIONS = [
   { q:"What does ECI stand for?",
     opts:["Electoral Council of India","Election Commission of India","Electoral Committee of India","Election Council of India"],
@@ -32,10 +48,6 @@ const QUESTIONS = [
 ];
 
 let qIndex = 0, score = 0, timer, timeLeft = 30;
-
-function initQuiz() {
-  showQuizStart();
-}
 
 function showQuizStart() {
   document.getElementById('tab-quiz').innerHTML = `
@@ -147,3 +159,12 @@ function shareScore(s) {
     alert('Score copied to clipboard! Share it anywhere 🎉');
   });
 }
+
+// Global exposure
+window.scoreQuiz = scoreQuiz;
+window.initQuiz = initQuiz;
+window.startQuiz = startQuiz;
+window.showQuestion = showQuestion;
+window.selectAnswer = selectAnswer;
+window.showResults = showResults;
+window.shareScore = shareScore;

@@ -1,3 +1,45 @@
+export function markAsMastered(term, currentMasteredList) {
+  if (!currentMasteredList.includes(term)) {
+    return [...currentMasteredList, term];
+  }
+  return currentMasteredList;
+}
+
+export function resetMastery() {
+  return [];
+}
+
+export function initFlashcards() {
+  const container = document.getElementById('flashcard');
+  if (!container) return;
+  
+  // Touch Swiping Support
+  let touchStartX = 0;
+  let touchEndX = 0;
+  
+  container.addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].screenX;
+  }, {passive: true});
+
+  container.addEventListener('touchend', e => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+  }, {passive: true});
+
+  function handleSwipe() {
+    const threshold = 50;
+    if (touchEndX < touchStartX - threshold) {
+      nextCard(); // Swipe Left
+    }
+    if (touchEndX > touchStartX + threshold) {
+      prevCard(); // Swipe Right
+    }
+  }
+
+  renderCard();
+  updateCounter();
+}
+
 const FLASHCARDS = [
   {term:"ECI", def:"Election Commission of India — Constitutional body under Article 324 that conducts free and fair elections in India.", cat:"Institution"},
   {term:"EVM", def:"Electronic Voting Machine — Replaced paper ballots in 1998. Standalone, tamper-proof device used for casting votes.", cat:"Process"},
@@ -31,37 +73,6 @@ let mastered = JSON.parse(localStorage.getItem('masteredFlashcards') || '[]');
 let deck = [...FLASHCARDS];
 let flipped = false;
 
-function initFlashcards() {
-  const container = document.getElementById('flashcard');
-  if (!container) return;
-  
-  // Touch Swiping Support
-  let touchStartX = 0;
-  let touchEndX = 0;
-  
-  container.addEventListener('touchstart', e => {
-    touchStartX = e.changedTouches[0].screenX;
-  }, {passive: true});
-
-  container.addEventListener('touchend', e => {
-    touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
-  }, {passive: true});
-
-  function handleSwipe() {
-    const threshold = 50;
-    if (touchEndX < touchStartX - threshold) {
-      nextCard(); // Swipe Left
-    }
-    if (touchEndX > touchStartX + threshold) {
-      prevCard(); // Swipe Right
-    }
-  }
-
-  renderCard();
-  updateCounter();
-}
-
 function renderCard() {
   const card = deck[currentCard];
   document.getElementById('card-term').textContent = card.term;
@@ -77,11 +88,9 @@ function flipCard() {
 }
 
 function gotIt() {
-  if (!mastered.includes(deck[currentCard].term)) {
-    mastered.push(deck[currentCard].term);
-    localStorage.setItem('masteredFlashcards', JSON.stringify(mastered));
-    if (window.updateDashboard) window.updateDashboard();
-  }
+  mastered = markAsMastered(deck[currentCard].term, mastered);
+  localStorage.setItem('masteredFlashcards', JSON.stringify(mastered));
+  if (window.updateDashboard) window.updateDashboard();
   nextCard();
   updateCounter();
 }
@@ -108,3 +117,16 @@ function updateCounter() {
   document.getElementById('mastered-count').textContent = 
     mastered.length + ' of 25 mastered';
 }
+
+// Global exposure
+window.markAsMastered = markAsMastered;
+window.resetMastery = resetMastery;
+window.initFlashcards = initFlashcards;
+window.renderCard = renderCard;
+window.flipCard = flipCard;
+window.gotIt = gotIt;
+window.reviewAgain = reviewAgain;
+window.nextCard = nextCard;
+window.prevCard = prevCard;
+window.shuffleDeck = shuffleDeck;
+window.updateCounter = updateCounter;

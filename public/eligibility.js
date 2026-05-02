@@ -1,4 +1,17 @@
-function initEligibility() {
+export function checkEligibility({ age, citizen, registered }) {
+    if (!citizen) {
+        return { eligible: false, message: 'Only citizens of India are eligible to vote.' };
+    }
+    if (age < 18) {
+        return { eligible: false, message: 'You must be at least 18 years old to vote.' };
+    }
+    if (!registered) {
+        return { eligible: true, message: 'You are eligible but need to register.' };
+    }
+    return { eligible: true, message: 'You are fully eligible!' };
+}
+
+export function initEligibility() {
     // UI is pre-rendered in HTML, step logic is handled here
 }
 
@@ -80,3 +93,12 @@ function resetElig() {
     document.getElementById('age-slider').value = 18;
     document.getElementById('age-val').textContent = 18;
 }
+
+// Global exposure for non-module compatibility or direct HTML calls
+window.checkEligibility = checkEligibility;
+window.initEligibility = initEligibility;
+window.updateAge = updateAge;
+window.eligNext = eligNext;
+window.checkAge = checkAge;
+window.eligResult = eligResult;
+window.resetElig = resetElig;
