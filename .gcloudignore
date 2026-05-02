@@ -6,3 +6,4 @@ node_modules
 # Ensure config.js is included in the build even if it's in .gitignore
 !public/config.js
 !config.js
+!.env

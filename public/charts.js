@@ -1,12 +1,17 @@
-function initCharts() {
+/**
+ * Election Analytics Module using Google Charts
+ */
+
+/**
+ * Initializes charts module
+ */
+export function initCharts() {
   if (typeof google === 'undefined' || typeof google.charts === 'undefined') {
-    showGlobalLoader(true);
     const script = document.createElement('script');
     script.src = 'https://www.gstatic.com/charts/loader.js';
     script.onload = () => {
       google.charts.load('current', {packages:['corechart']});
       google.charts.setOnLoadCallback(() => {
-        showGlobalLoader(false);
         showChart('seats');
       });
     };
@@ -16,7 +21,11 @@ function initCharts() {
   }
 }
 
-function showChart(type) {
+/**
+ * Switches and draws the selected chart
+ * @param {string} type - 'seats', 'turnout', 'trend', or 'gender'
+ */
+export function showChart(type) {
   document.querySelectorAll('.chart-tab-btn').forEach(b => 
     b.classList.remove('active'));
   
@@ -29,6 +38,9 @@ function showChart(type) {
   if (type === 'gender') drawGender();
 }
 
+/**
+ * Draws Seat Distribution Pie Chart
+ */
 function drawSeats() {
   const data = google.visualization.arrayToDataTable([
     ['Alliance','Seats'],
@@ -42,11 +54,16 @@ function drawSeats() {
     colors:['#FF6B35','#5B4FE9','#94A3B8'],
     pieHole: 0.4,
     height: 400,
+    backgroundColor: 'transparent',
     chartArea: { width: '90%', height: '80%' },
-    legend: { position: 'bottom' }
+    legend: { position: 'bottom', textStyle: { color: 'var(--text-main)' } },
+    titleTextStyle: { color: 'var(--text-main)' }
   });
 }
 
+/**
+ * Draws Top Turnout States Bar Chart
+ */
 function drawTurnout() {
   const data = google.visualization.arrayToDataTable([
     ['State','Turnout %'],
@@ -59,11 +76,17 @@ function drawTurnout() {
   chart.draw(data, {
     title:'Top 10 States by Voter Turnout (2024)',
     colors:['#5B4FE9'], height:400,
-    hAxis:{title:'Voter Turnout (%)', minValue: 0, maxValue: 100},
-    chartArea: { width: '70%', height: '80%' }
+    backgroundColor: 'transparent',
+    hAxis:{title:'Voter Turnout (%)', minValue: 0, maxValue: 100, textStyle: { color: 'var(--text-main)' }, titleTextStyle: { color: 'var(--text-main)' }},
+    vAxis:{textStyle: { color: 'var(--text-main)' }},
+    chartArea: { width: '70%', height: '80%' },
+    titleTextStyle: { color: 'var(--text-main)' }
   });
 }
 
+/**
+ * Draws Historical Trend Line Chart
+ */
 function drawTrend() {
   const data = google.visualization.arrayToDataTable([
     ['Year','Turnout %'],
@@ -76,14 +99,19 @@ function drawTrend() {
   chart.draw(data, {
     title:'National Voter Turnout Trend (1984–2024)',
     colors:['#5B4FE9'], height:400,
+    backgroundColor: 'transparent',
     curveType:'function',
-    vAxis:{title:'Turnout %', minValue: 50},
-    hAxis: { title: 'Election Year' },
+    vAxis:{title:'Turnout %', minValue: 50, textStyle: { color: 'var(--text-main)' }, titleTextStyle: { color: 'var(--text-main)' }},
+    hAxis: { title: 'Election Year', textStyle: { color: 'var(--text-main)' }, titleTextStyle: { color: 'var(--text-main)' } },
     chartArea: { width: '80%', height: '70%' },
-    legend: { position: 'none' }
+    legend: { position: 'none' },
+    titleTextStyle: { color: 'var(--text-main)' }
   });
 }
 
+/**
+ * Draws Gender Turnout Comparison Column Chart
+ */
 function drawGender() {
   const data = google.visualization.arrayToDataTable([
     ['State','Male %','Female %'],
@@ -96,8 +124,16 @@ function drawGender() {
   chart.draw(data, {
     title:'Male vs Female Voter Turnout 2024',
     colors:['#5B4FE9','#22C55E'], height:400,
+    backgroundColor: 'transparent',
     isStacked:false,
-    vAxis: { title: 'Turnout %' },
-    chartArea: { width: '80%', height: '70%' }
+    vAxis: { title: 'Turnout %', textStyle: { color: 'var(--text-main)' }, titleTextStyle: { color: 'var(--text-main)' } },
+    hAxis: { textStyle: { color: 'var(--text-main)' } },
+    chartArea: { width: '80%', height: '70%' },
+    legend: { textStyle: { color: 'var(--text-main)' } },
+    titleTextStyle: { color: 'var(--text-main)' }
   });
 }
+
+// Global exposure
+window.initCharts = initCharts;
+window.showChart = showChart;

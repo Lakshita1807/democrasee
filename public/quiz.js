@@ -1,3 +1,13 @@
+/**
+ * Quiz Module for DemocraSee
+ */
+
+/**
+ * Calculates the quiz score
+ * @param {Array<number>} userAnswers 
+ * @param {Array<number>} correctAnswers 
+ * @returns {number}
+ */
 export function scoreQuiz(userAnswers, correctAnswers) {
   if (!userAnswers || !correctAnswers) return 0;
   let score = 0;
@@ -10,84 +20,77 @@ export function scoreQuiz(userAnswers, correctAnswers) {
   return score;
 }
 
-export function initQuiz() {
+let QUESTIONS = [];
+let qIndex = 0, score = 0, timer, timeLeft = 30;
+
+/**
+ * Initializes quiz module
+ */
+export async function initQuiz() {
+  const data = await window.getCached('quiz_data', () => 
+    fetch('data/quiz.json').then(r => r.json())
+  );
+  QUESTIONS = data;
   showQuizStart();
 }
 
-const QUESTIONS = [
-  { q:"What does ECI stand for?",
-    opts:["Electoral Council of India","Election Commission of India","Electoral Committee of India","Election Council of India"],
-    ans:1, exp:"ECI is established under Article 324 of the Constitution to conduct free and fair elections." },
-  { q:"Minimum age to vote in India?",
-    opts:["16 years","21 years","18 years","25 years"],
-    ans:2, exp:"Lowered from 21 to 18 by the 61st Constitutional Amendment Act, 1988." },
-  { q:"What does NOTA stand for?",
-    opts:["No Other Than Abstain","Not One Total Answer","None Of The Above","No Other Trusted Alternative"],
-    ans:2, exp:"NOTA introduced by Supreme Court order in 2013 to allow voters to reject all candidates." },
-  { q:"Which Article establishes the Election Commission?",
-    opts:["Article 280","Article 315","Article 324","Article 356"],
-    ans:2, exp:"Article 324 gives ECI superintendence over all elections to Parliament and State Legislatures." },
-  { q:"What does VVPAT stand for?",
-    opts:["Voter Verified Paper Audit Trail","Verified Voter Paper and Tally","Vote Verification Printing Audit Tool","Verified Voting Paper Audit Technology"],
-    ans:0, exp:"VVPAT shows a paper slip of your vote for 7 seconds to verify your EVM choice." },
-  { q:"Seats needed for Lok Sabha majority?",
-    opts:["243","252","261","272"],
-    ans:3, exp:"Simple majority = 272 seats (more than half of 543 elected seats)." },
-  { q:"How many Lok Sabha constituencies in India?",
-    opts:["428","543","552","600"],
-    ans:1, exp:"There are 543 elected Lok Sabha constituencies across all states and UTs." },
-  { q:"When does Model Code of Conduct begin?",
-    opts:["30 days before polling","When nominations open","When ECI announces schedule","On polling day"],
-    ans:2, exp:"MCC kicks in immediately when ECI announces the election schedule." },
-  { q:"Security deposit for general Lok Sabha candidate?",
-    opts:["₹10,000","₹25,000","₹50,000","₹1,00,000"],
-    ans:1, exp:"₹25,000 for general, ₹12,500 for SC/ST. Forfeited if votes below 1/6th of total." },
-  { q:"Where is India's indelible election ink made?",
-    opts:["Bengaluru Chemicals Ltd","Government Mysore Paints & Varnish Ltd","Mumbai Ink Corporation","Delhi State Industries"],
-    ans:1, exp:"Exclusively manufactured at Government Mysore Paints & Varnish Ltd in Karnataka." }
-];
-
-let qIndex = 0, score = 0, timer, timeLeft = 30;
-
+/**
+ * Shows the quiz starting screen
+ */
 function showQuizStart() {
-  document.getElementById('tab-quiz').innerHTML = `
+  const container = document.getElementById('tab-quiz');
+  if (!container) return;
+  container.innerHTML = `
     <div class="quiz-start">
-      <div class="quiz-icon">🎓</div>
+      <div class="quiz-icon" aria-hidden="true"><i data-lucide="graduation-cap" style="width: 48px; height: 48px;"></i></div>
       <h2>Master Election Quiz</h2>
       <p>Test your knowledge of Indian elections</p>
       <div class="quiz-meta">
-        <span>📝 10 Questions</span>
-        <span>⏱️ 30 sec each</span>
-        <span>🏆 Win badges</span>
+        <span><i data-lucide="file-text"></i> ${QUESTIONS.length} Questions</span>
+        <span><i data-lucide="clock"></i> 30 sec each</span>
+        <span><i data-lucide="award"></i> Win badges</span>
       </div>
-      <button class="btn-primary" onclick="startQuiz()">Start Quiz →</button>
+      <button class="btn-primary" onclick="startQuiz()">Start Quiz <i data-lucide="arrow-right"></i></button>
     </div>`;
+  if (window.lucide) lucide.createIcons();
 }
 
+/**
+ * Starts the quiz
+ */
 function startQuiz() {
   qIndex = 0; score = 0;
   showQuestion();
 }
 
+/**
+ * Displays current question
+ */
 function showQuestion() {
+  const container = document.getElementById('tab-quiz');
+  if (!container) return;
   if (qIndex >= QUESTIONS.length) { showResults(); return; }
   const q = QUESTIONS[qIndex];
   timeLeft = 30;
-  document.getElementById('tab-quiz').innerHTML = `
-    <div class="quiz-question">
+  container.innerHTML = `
+    <div class="quiz-question" aria-live="polite">
       <div class="quiz-progress">Question ${qIndex+1} of ${QUESTIONS.length}</div>
       <div class="quiz-timer-bar"><div id="timer-fill" style="width:100%"></div></div>
-      <div id="timer-text">⏱️ ${timeLeft}s</div>
-      <h3>${q.q}</h3>
+      <div id="timer-text"><i data-lucide="clock"></i> ${timeLeft}s</div>
+      <h3>${q.question}</h3>
       <div class="quiz-options">
-        ${q.opts.map((o,i) => 
+        ${q.options.map((o,i) => 
           `<button class="quiz-opt" onclick="selectAnswer(${i})">${o}</button>`
         ).join('')}
       </div>
     </div>`;
+  if (window.lucide) lucide.createIcons();
   startTimer();
 }
 
+/**
+ * Starts question timer
+ */
 function startTimer() {
   clearInterval(timer);
   timer = setInterval(() => {
@@ -96,65 +99,87 @@ function startTimer() {
     const text = document.getElementById('timer-text');
     if (fill) fill.style.width = (timeLeft/30*100) + '%';
     if (fill && timeLeft <= 10) fill.style.background = '#EF4444';
-    if (text) text.textContent = '⏱️ ' + timeLeft + 's';
+    if (text) text.innerHTML = `<i data-lucide="clock"></i> ${timeLeft}s`;
     if (timeLeft <= 0) { clearInterval(timer); selectAnswer(-1); }
   }, 1000);
 }
 
+/**
+ * Handles answer selection
+ * @param {number} chosen - Index of chosen option
+ */
 function selectAnswer(chosen) {
   clearInterval(timer);
   const q = QUESTIONS[qIndex];
-  const correct = chosen === q.ans;
+  const correct = chosen === q.correctIndex;
   if (correct) score++;
-  
+  else {
+    if (window.gtag) {
+        gtag('event', 'quiz_miss_question', {
+            'question': q.question,
+            'selected_index': chosen,
+            'correct_index': q.correctIndex
+        });
+    }
+  }
   const opts = document.querySelectorAll('.quiz-opt');
   opts.forEach((btn, i) => {
     btn.disabled = true;
-    if (i === q.ans) btn.style.background = '#22C55E';
+    if (i === q.correctIndex) btn.style.background = '#22C55E';
     else if (i === chosen) btn.style.background = '#EF4444';
   });
   
   const exp = document.createElement('div');
   exp.className = 'quiz-explanation';
-  exp.innerHTML = `<strong>${correct ? '✅ Correct!' : '❌ Wrong!'}</strong><br>${q.exp}`;
+  exp.innerHTML = `<strong>${correct ? '<i data-lucide="check-circle" style="color:#22C55E"></i> Correct!' : '<i data-lucide="x-circle" style="color:#EF4444"></i> Wrong!'}</strong><br>${q.explanation}`;
   document.querySelector('.quiz-options').after(exp);
   
   const next = document.createElement('button');
   next.className = 'btn-primary';
   next.style.marginTop = '20px';
-  next.textContent = qIndex < 9 ? 'Next Question →' : 'See Results 🏆';
+  next.innerHTML = qIndex < QUESTIONS.length - 1 ? 'Next Question <i data-lucide="arrow-right"></i>' : 'See Results <i data-lucide="award"></i>';
   next.onclick = () => { qIndex++; showQuestion(); };
   exp.after(next);
+  if (window.lucide) lucide.createIcons();
 }
 
+/**
+ * Displays final results
+ */
 function showResults() {
+  const container = document.getElementById('tab-quiz');
+  if (!container) return;
   const badge = score >= 9 ? '🥇 Election Expert!' :
                 score >= 6 ? '🥈 Civic Scholar!' : '🥉 Keep Learning!';
   
-  // Save Best Score
   const best = parseInt(localStorage.getItem('quizBestScore') || '0');
   if (score > best) {
     localStorage.setItem('quizBestScore', score);
     if (window.updateDashboard) window.updateDashboard();
   }
 
-  document.getElementById('tab-quiz').innerHTML = `
-    <div class="quiz-results">
-      <div class="quiz-icon">🏆</div>
+  container.innerHTML = `
+    <div class="quiz-results" aria-live="assertive">
+      <div class="quiz-icon" aria-hidden="true"><i data-lucide="award" style="width: 48px; height: 48px;"></i></div>
       <div class="result-badge" style="font-weight:700; color:var(--primary); margin-bottom:10px;">${badge}</div>
-      <h2>You scored ${score}/10</h2>
+      <h2>You scored ${score}/${QUESTIONS.length}</h2>
       <p style="margin: 10px 0 24px;">${score >= 9 ? 'Outstanding! You know Indian elections inside out!' :
           score >= 6 ? 'Great job! You have solid election knowledge!' :
           'Good effort! Keep exploring DemocraSee to learn more!'}</p>
       <div class="result-actions" style="display:flex; gap:12px; justify-content:center;">
-        <button class="btn-primary" onclick="startQuiz()">Retry Quiz 🔄</button>
-        <button class="btn-secondary" onclick="shareScore(${score})">Share Score 📤</button>
+        <button class="btn-primary" onclick="startQuiz()">Retry Quiz <i data-lucide="refresh-cw"></i></button>
+        <button class="btn-secondary" onclick="shareScore(${score})">Share Score <i data-lucide="share-2"></i></button>
       </div>
     </div>`;
+  if (window.lucide) lucide.createIcons();
 }
 
+/**
+ * Copies score to clipboard
+ * @param {number} s - Score
+ */
 function shareScore(s) {
-  const text = `I scored ${s}/10 on the DemocraSee Election Quiz! 🗳️ Test your knowledge here!`;
+  const text = `I scored ${s}/${QUESTIONS.length} on the DemocraSee Election Quiz! 🗳️ Test your knowledge here!`;
   navigator.clipboard.writeText(text).then(() => {
     alert('Score copied to clipboard! Share it anywhere 🎉');
   });

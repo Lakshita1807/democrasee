@@ -1,15 +1,30 @@
-// API configurations are now handled by the backend for security
+/**
+ * AI Chatbot Module for DemocraSee
+ * Handles Gemini API integration and chat UI
+ */
 
 let lastRequestTime = 0;
 const REQUEST_COOLDOWN = 2000; // 2 seconds
 
-function sanitizeInput(text) {
+/**
+ * Sanitizes user input
+ * @param {string} text 
+ * @returns {string}
+ */
+export function sanitizeInput(text) {
+    if (!text) return '';
+    // Limit to 500 characters
+    const truncated = text.substring(0, 500);
     const div = document.createElement('div');
-    div.textContent = text;
+    div.textContent = truncated;
     return div.innerHTML.trim();
 }
 
-function showGlobalLoader(show) {
+/**
+ * Toggles global loader
+ * @param {boolean} show 
+ */
+export function showGlobalLoader(show) {
     const loader = document.getElementById('global-loader');
     if (loader) {
         if (show) loader.classList.remove('hidden');
@@ -34,7 +49,10 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     recognition.onend = () => stopListening();
 }
 
-function toggleListening() {
+/**
+ * Toggles speech recognition
+ */
+export function toggleListening() {
     const btn = document.getElementById('mic-btn');
     if (!recognition) {
         alert("Speech recognition not supported in this browser.");
@@ -48,21 +66,34 @@ function toggleListening() {
     }
 }
 
-function startListening() {
+/**
+ * Starts speech recognition
+ */
+export function startListening() {
     const btn = document.getElementById('mic-btn');
-    btn.classList.add('mic-active');
-    btn.title = "Listening...";
+    if (btn) {
+        btn.classList.add('mic-active');
+        btn.title = "Listening...";
+    }
     recognition.start();
 }
 
-function stopListening() {
+/**
+ * Stops speech recognition
+ */
+export function stopListening() {
     const btn = document.getElementById('mic-btn');
-    btn.classList.remove('mic-active');
-    btn.title = "Voice Input";
+    if (btn) {
+        btn.classList.remove('mic-active');
+        btn.title = "Voice Input";
+    }
     recognition.stop();
 }
 
-function exportChat() {
+/**
+ * Exports chat history to a text file
+ */
+export function exportChat() {
     const messages = Array.from(document.querySelectorAll('.message'))
         .map(m => {
             const role = m.classList.contains('user') ? 'USER' : 'AI';
@@ -83,28 +114,26 @@ function exportChat() {
     URL.revokeObjectURL(url);
 }
 
+/**
+ * Calls the backend API for Gemini response
+ * @param {string} userMessage 
+ * @returns {Promise<string>}
+ */
 async function callGemini(userMessage) {
-  // Check Cache first
+  // Check Cache first (TTL 1 hour)
   const cacheKey = `gemini_cache_${userMessage.toLowerCase().trim()}`;
-  const cachedResponse = sessionStorage.getItem(cacheKey);
-  if (cachedResponse) {
-    console.log("Serving from cache...");
-    return cachedResponse;
-  }
+  const cachedResponse = await window.getCached(cacheKey, async () => {
+      // Rate Limiting Check
+      const now = Date.now();
+      if (now - lastRequestTime < REQUEST_COOLDOWN) {
+        throw new Error("WAIT_COOLDOWN");
+      }
+      lastRequestTime = now;
 
-  // Rate Limiting
-  const now = Date.now();
-  if (now - lastRequestTime < REQUEST_COOLDOWN) {
-    return "Please wait a moment before asking another question... ⏳";
-  }
-  lastRequestTime = now;
+      const region = localStorage.getItem('userRegion') || 'India';
+      const role = localStorage.getItem('userRole') || 'Voter';
 
-  try {
-    const region = localStorage.getItem('userRegion') || 'India';
-    const role = localStorage.getItem('userRole') || 'Voter';
-
-    const prompt = `You are ElectionGuide, a friendly civic 
-education assistant for Indian elections.
+      const prompt = `You are ElectionGuide, a friendly civic education assistant for Indian elections.
 User region: ${region}. User role: ${role}.
 Rules:
 - Never favor any party. Use simple language.
@@ -114,50 +143,46 @@ Rules:
 
 User question: ${userMessage}`;
 
-    const customKey = localStorage.getItem('democrasee_key');
+      const response = await fetch('/api/chat', {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: prompt })
+        }
+      );
 
-    const response = await fetch('/api/chat', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: prompt,
-          apiKey: customKey
-        })
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error("Gemini error:", data);
+        throw new Error("API_ERROR");
       }
-    );
 
-    const data = await response.json();
-    
-    if (!response.ok) {
-      console.error("Gemini error:", data);
-      throw new Error("API error: " + response.status);
-    }
+      return data.candidates[0].content.parts[0].text;
+  }, 3600000);
 
-    const aiText = data.candidates[0].content.parts[0].text;
-    
-    // Save to Cache
-    sessionStorage.setItem(cacheKey, aiText);
-    
-    return aiText;
-
-  } catch (error) {
-    console.error("Gemini call failed:", error);
-    return "Sorry, I couldn't connect. Please try again! 🔄";
-  }
+  return cachedResponse;
 }
 
-// UI Glue Logic
-function appendMessage(role, text) {
+/**
+ * Appends a message to the chat container
+ * @param {string} role - 'user' or 'ai'
+ * @param {string} text 
+ */
+export function appendMessage(role, text) {
     const container = document.getElementById('chat-messages');
     if (!container) return;
     const msgDiv = document.createElement('div');
     msgDiv.className = `message ${role}`;
-    msgDiv.textContent = text;
+    msgDiv.innerHTML = text; 
     container.appendChild(msgDiv);
     container.scrollTop = container.scrollHeight;
 }
 
-async function sendMessage(text) {
+/**
+ * Sends a user message and handles AI response
+ * @param {string} text 
+ */
+export async function sendMessage(text) {
     const cleanText = sanitizeInput(text);
     if (!cleanText) return;
     
@@ -166,50 +191,69 @@ async function sendMessage(text) {
     if (input) input.value = '';
     
     const indicator = document.getElementById('typing-indicator');
-    indicator?.classList.remove('hidden');
+    if (indicator) indicator.classList.remove('hidden');
     
-    const aiResponse = await callGemini(cleanText);
-    indicator?.classList.add('hidden');
-    appendMessage('ai', aiResponse);
-    generateChips(aiResponse);
-    
-    // Update Stats
-    const count = parseInt(localStorage.getItem('stats_questions') || '0');
-    localStorage.setItem('stats_questions', count + 1);
-    if (window.updateDashboard) window.updateDashboard();
+    try {
+        const aiResponse = await callGemini(cleanText);
+        if (indicator) indicator.classList.add('hidden');
+        appendMessage('ai', aiResponse);
+        generateChips(aiResponse);
+        
+        // Update Stats
+        const count = parseInt(localStorage.getItem('stats_questions') || '0');
+        localStorage.setItem('stats_questions', count + 1);
+        if (window.updateDashboard) window.updateDashboard();
+    } catch (error) {
+        if (indicator) indicator.classList.add('hidden');
+        if (error.message === 'WAIT_COOLDOWN') {
+            appendMessage('ai', "Please wait a moment before asking another question... <i data-lucide='clock'></i>");
+        } else {
+            appendMessage('ai', "Sorry, I couldn't connect. Please try again! <i data-lucide='refresh-cw'></i>");
+        }
+        if (window.lucide) lucide.createIcons();
+    }
 }
 
-function generateChips(responseText) {
+/**
+ * Generates suggestion chips based on AI response
+ * @param {string} responseText 
+ */
+export function generateChips(responseText) {
     const container = document.getElementById('suggestion-chips');
     if (!container) return;
     container.innerHTML = '';
     
-    let topics = ["🗳️ How to Vote", "📝 Registration", "📅 Key Dates"];
+    let topics = ["How to Vote", "Registration", "Key Dates"];
     
     const text = responseText.toLowerCase();
     if (text.includes('vote') || text.includes('booth') || text.includes('poll')) {
-        topics = ["📄 Documents needed?", "📅 Deadline?", "🗺️ Find my booth?"];
+        topics = ["Documents needed?", "Deadline?", "Find my booth?"];
     } else if (text.includes('regist') || text.includes('form') || text.includes('voter id')) {
-        topics = ["📝 Form 6 guide", "✅ Check status", "📅 Last date?"];
+        topics = ["Form 6 guide", "Check status", "Last date?"];
     } else if (text.includes('timeline') || text.includes('date') || text.includes('phase')) {
-        topics = ["🗳️ Polling day details", "📣 Campaign rules", "🔢 Counting process"];
+        topics = ["Polling day details", "Campaign rules", "Counting process"];
     }
     
     topics.forEach(topic => {
-        const chip = document.createElement('div');
+        const chip = document.createElement('button');
         chip.className = 'chip';
-        chip.textContent = topic;
+        chip.innerHTML = `<span>${topic}</span> <i data-lucide="chevron-right"></i>`;
         chip.onclick = () => sendMessage(topic);
         container.appendChild(chip);
     });
+    if (window.lucide) lucide.createIcons();
 }
 
-function initChat() {
+/**
+ * Initializes chat module
+ */
+export function initChat() {
     const container = document.getElementById('chat-messages');
     if (!container || container.children.length > 0) return;
-    const welcome = `Namaste! 🙏 I'm your ElectionGuide. How can I help you today?`;
+    const welcome = `Namaste! <i data-lucide="hand"></i> I'm your ElectionGuide. How can I help you today?`;
     appendMessage('ai', welcome);
     generateChips(welcome);
+    if (window.lucide) lucide.createIcons();
 }
 
 // Event Listeners
@@ -234,7 +278,6 @@ document.getElementById('clear-chat')?.addEventListener('click', () => {
 
 // Global exposure
 window.initChat = initChat;
-window.callGemini = callGemini;
 window.sendMessage = sendMessage;
 window.sanitizeInput = sanitizeInput;
 window.showGlobalLoader = showGlobalLoader;

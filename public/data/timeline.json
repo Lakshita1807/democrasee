@@ -1,0 +1,11 @@
+[
+    { "id": 1, "title": "Phase 1", "date": "April 19, 2024", "icon": "calendar", "status": "completed", "short": "102 constituencies across 21 states/UTs.", "detail": "High turnout recorded in Northeast and Tamil Nadu." },
+    { "id": 2, "title": "Phase 2", "date": "April 26, 2024", "icon": "calendar", "status": "completed", "short": "88 constituencies in 13 states/UTs.", "detail": "Key contests in Karnataka, Rajasthan, and Kerala." },
+    { "id": 3, "title": "Phase 3", "date": "May 7, 2024", "icon": "calendar", "status": "completed", "short": "93 constituencies in 11 states/UTs.", "detail": "Heavy polling in Gujarat and Maharashtra." },
+    { "id": 4, "title": "Phase 4", "date": "May 13, 2024", "icon": "calendar", "status": "completed", "short": "96 constituencies in 10 states/UTs.", "detail": "Includes Andhra Pradesh and Telangana state elections." },
+    { "id": 5, "title": "Phase 5", "date": "May 20, 2024", "icon": "calendar", "status": "completed", "short": "49 constituencies in 8 states/UTs.", "detail": "Crucial phase for Mumbai and parts of UP/Bihar." },
+    { "id": 6, "title": "Phase 6", "date": "May 25, 2024", "icon": "calendar", "status": "completed", "short": "58 constituencies in 8 states/UTs.", "detail": "Voting in Delhi, Haryana, and West Bengal." },
+    { "id": 7, "title": "Phase 7", "date": "June 1, 2024", "icon": "calendar", "status": "current", "short": "57 constituencies in 8 states/UTs.", "detail": "Final phase including Varanasi and Punjab." },
+    { "id": 8, "title": "Counting Day", "date": "June 4, 2024", "icon": "bar-chart", "status": "upcoming", "short": "Nationwide counting of votes begins.", "detail": "Final results for all 543 Lok Sabha seats." },
+    { "id": 9, "title": "New Gov Formed", "date": "June 16, 2024", "icon": "users", "status": "upcoming", "short": "Deadline for constitution of 18th Lok Sabha.", "detail": "New government takes oath of office." }
+]

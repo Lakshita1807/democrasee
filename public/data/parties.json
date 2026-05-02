@@ -1,0 +1,56 @@
+[
+    {
+        "name": "Bharatiya Janata Party (BJP)",
+        "symbol": "flower",
+        "symbolName": "Lotus",
+        "ideology": "Right-wing, Hindutva, Integral Humanism, Social Conservatism",
+        "focus": "Nationalism, Digital India, Infrastructure, Economic Reform",
+        "color": "#FF9933",
+        "founded": "1980"
+    },
+    {
+        "name": "Indian National Congress (INC)",
+        "symbol": "hand",
+        "symbolName": "Hand",
+        "ideology": "Big tent, Secularism, Social Democracy, Progressivism",
+        "focus": "Social Welfare, Rural Development, Healthcare, Inclusion",
+        "color": "#19AAED",
+        "founded": "1885"
+    },
+    {
+        "name": "Aam Aadmi Party (AAP)",
+        "symbol": "brush",
+        "symbolName": "Broom",
+        "ideology": "Populism, Anti-corruption, Welfarism, Civic Nationalism",
+        "focus": "Education, Free Electricity/Water, Mohalla Clinics, Transparency",
+        "color": "#0072B0",
+        "founded": "2012"
+    },
+    {
+        "name": "Communist Party of India (Marxist)",
+        "symbol": "hammer",
+        "symbolName": "Hammer and Sickle",
+        "ideology": "Left-wing, Marxism-Leninism, Socialism, Anti-imperialism",
+        "focus": "Workers' Rights, Land Reforms, Public Sector, Social Equality",
+        "color": "#DE0000",
+        "founded": "1964"
+    },
+    {
+        "name": "Bahujan Samaj Party (BSP)",
+        "symbol": "box",
+        "symbolName": "Elephant",
+        "ideology": "Ambedkarism, Social Equality, Bahujan Rights, Secularism",
+        "focus": "Dalit Empowerment, Social Justice, Reservation, Rule of Law",
+        "color": "#0000FF",
+        "founded": "1984"
+    },
+    {
+        "name": "All India Trinamool Congress (AITC)",
+        "symbol": "sprout",
+        "symbolName": "Flowers & Grass",
+        "ideology": "Regionalism, Populism, Secularism, Progressivism",
+        "focus": "State Autonomy, Maa Mati Manush, Women Empowerment",
+        "color": "#20C646",
+        "founded": "1998"
+    }
+]

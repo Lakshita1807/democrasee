@@ -1,0 +1,30 @@
+[
+    {
+        "title": "National Voter Helpline",
+        "number": "1950",
+        "description": "For any queries related to voter registration, EPIC, etc.",
+        "category": "National",
+        "icon": "phone"
+    },
+    {
+        "title": "ECI Control Room",
+        "number": "011-23052220",
+        "description": "Election Commission of India - Main Control Room",
+        "category": "National",
+        "icon": "building"
+    },
+    {
+        "title": "State Election Office",
+        "number": "1800-111-400",
+        "description": "General state-level assistance for election process",
+        "category": "State",
+        "icon": "landmark"
+    },
+    {
+        "title": "Complaint Registration",
+        "number": "1912",
+        "description": "Lodge complaints regarding election misconduct or issues",
+        "category": "Urgent",
+        "icon": "alert-triangle"
+    }
+]

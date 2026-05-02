@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DemocraSee ☑️ - Your Smart Election Guide</title>
+    <title>DemocraSee <span aria-hidden="true">☑️</span> - Your Smart Election Guide</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,6 +11,25 @@
     <!-- Google Charts (Lazy loaded via charts.js) -->
     <!-- <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script> -->
     <link rel="stylesheet" href="style.css">
+    <link rel="preload" href="style.css" as="style">
+    <link rel="preload" href="app.js" as="script" type="module">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DEMOCRASEE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DEMOCRASEE');
+    </script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
 </head>
 <body>
 
@@ -21,19 +40,15 @@
     </div>
 
     <!-- Fixed Header Ticker -->
-    <div class="news-ticker-container">
+    <div class="news-ticker-container" id="news-ticker-container">
         <div class="ticker-move">
-            <span>🗳️ 96.8 Crore registered voters in India 2024</span>
-            <span>📊 66.3% national voter turnout in 2024</span>
-            <span>🏆 543 Lok Sabha seats contested</span>
-            <span>👩 74 women elected to Lok Sabha in 2024</span>
-            <span>📅 7 phases of polling in 2024</span>
-            <span>🖊️ Indelible ink used since 1962</span>
-            <span>🤖 EVM introduced nationally in 2004</span>
-            <!-- Duplicate for seamless loop -->
-            <span>🗳️ 96.8 Crore registered voters in India 2024</span>
-            <span>📊 66.3% national voter turnout in 2024</span>
-            <span>🏆 543 Lok Sabha seats contested</span>
+            <span><i data-lucide="vote" aria-hidden="true"></i> 96.8 Crore registered voters in India 2024</span>
+            <span><i data-lucide="bar-chart-3" aria-hidden="true"></i> 66.3% national voter turnout in 2024</span>
+            <span><i data-lucide="trophy" aria-hidden="true"></i> 543 Lok Sabha seats contested</span>
+            <span><i data-lucide="users" aria-hidden="true"></i> 74 women elected to Lok Sabha in 2024</span>
+            <span><i data-lucide="calendar" aria-hidden="true"></i> 7 phases of polling in 2024</span>
+            <span><i data-lucide="pen-tool" aria-hidden="true"></i> Indelible ink used since 1962</span>
+            <span><i data-lucide="cpu" aria-hidden="true"></i> EVM introduced nationally in 2004</span>
         </div>
     </div>
 
@@ -41,7 +56,7 @@
     <div id="onboarding-modal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
-                <span class="logo-icon">☑️</span>
+                <div class="logo-icon"><i data-lucide="check-square"></i></div>
                 <h1 data-i18n="welcome">Welcome to DemocraSee</h1>
                 <p data-i18n="tagline">Your Smart Election Guide</p>
             </div>
@@ -110,7 +125,7 @@
                         <button class="lang-btn" onclick="setLanguage('BN')">বাংলা</button>
                     </div>
                 </div>
-                <button id="get-started-btn" class="btn-primary" data-i18n="getStarted">Get Started →</button>
+                <button id="get-started-btn" class="btn-primary" data-i18n="getStarted">Get Started <i data-lucide="arrow-right"></i></button>
             </div>
         </div>
     </div>
@@ -120,26 +135,26 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <span class="logo-icon">☑️</span>
+                    <div class="logo-icon" aria-hidden="true"><i data-lucide="check-square"></i></div>
                     <h2>DemocraSee</h2>
                 </div>
                 <div class="badges">
-                    <span id="region-badge" class="badge badge-region">📍 India</span>
-                    <span id="role-badge" class="badge badge-role">👤 Voter</span>
+                    <span id="region-badge" class="badge badge-region"><i data-lucide="map-pin" aria-hidden="true"></i> India</span>
+                    <span id="role-badge" class="badge badge-role"><i data-lucide="user" aria-hidden="true"></i> Voter</span>
                 </div>
                 
-                <div id="progress-card" class="progress-card">
+                <div id="progress-card" class="progress-card" aria-live="polite">
                     <h4>YOUR PROGRESS</h4>
                     <div class="stat-row">
-                        <span>🃏 Mastered:</span>
+                        <span><i data-lucide="layers" aria-hidden="true"></i> Mastered:</span>
                         <span id="stat-flashcards">0/25</span>
                     </div>
                     <div class="stat-row">
-                        <span>🎓 Quiz Score:</span>
+                        <span><i data-lucide="graduation-cap" aria-hidden="true"></i> Quiz Score:</span>
                         <span id="stat-quiz">0/10</span>
                     </div>
                     <div class="stat-row">
-                        <span>💬 Questions:</span>
+                        <span><i data-lucide="message-circle" aria-hidden="true"></i> Questions:</span>
                         <span id="stat-questions">0</span>
                     </div>
                 </div>
@@ -147,66 +162,80 @@
             
             <nav class="nav-menu">
                 <a href="#" class="nav-item active" data-tab="assistant">
-                    <span class="nav-icon">🤖</span>
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="bot"></i></span>
                     <span data-i18n="aiAssistant">AI Assistant</span>
                 </a>
                 <a href="#" class="nav-item" data-tab="timeline">
-                    <span class="nav-icon">📅</span>
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="calendar"></i></span>
                     <span data-i18n="timeline">Election Timeline</span>
                 </a>
                 <a href="#" class="nav-item" data-tab="news">
-                    <span class="nav-icon">📰</span>
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="newspaper"></i></span>
                     <span>Current News</span>
                 </a>
                 <a href="#" class="nav-item" data-tab="flashcards">
-                    <span class="nav-icon">🃏</span>
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="layers"></i></span>
                     <span data-i18n="flashcards">Flashcards</span>
                 </a>
                 <a href="#" class="nav-item" data-tab="charts">
-                    <span class="nav-icon">📊</span>
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="bar-chart-2"></i></span>
                     <span data-i18n="dataStats">Data & Stats</span>
                 </a>
                 <a href="#" class="nav-item" data-tab="eligibility">
-                    <span class="nav-icon">✅</span>
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="check-circle"></i></span>
                     <span data-i18n="eligible">Am I Eligible?</span>
                 </a>
                 <a href="#" class="nav-item" data-tab="multilingual">
-                    <span class="nav-icon">🌍</span>
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="globe"></i></span>
                     <span>Languages</span>
                 </a>
                 <a href="#" class="nav-item" data-tab="helpline">
-                    <span class="nav-icon">☎️</span>
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="phone-call"></i></span>
                     <span data-i18n="helpline">Helpline Numbers</span>
                 </a>
                 <a href="#" class="nav-item" data-tab="voter-id">
-                    <span class="nav-icon">🆔</span>
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="id-card"></i></span>
                     <span data-i18n="voterService">Voter ID Service</span>
                 </a>
                 <a href="#" class="nav-item" data-tab="parties">
-                    <span class="nav-icon">🗳️</span>
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="landmark"></i></span>
                     <span data-i18n="parties">Political Parties</span>
                 </a>
                 
                 <div class="nav-section">ESSENTIAL QUIZZES</div>
                 <a href="#" class="nav-item" data-tab="quiz">
-                    <span class="nav-icon">🎓</span>
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
                     <span data-i18n="quiz">Master Election Quiz</span>
                 </a>
                 
                 <div class="nav-section">COMMUNITY</div>
                 <a href="#" id="share-btn" class="nav-item">
-                    <span class="nav-icon">📤</span>
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="share-2"></i></span>
                     <span>Share DemocraSee</span>
                 </a>
 
                 <div class="nav-section">SETTINGS</div>
                 <div class="nav-item theme-switch-item">
-                    <span class="nav-icon">🌓</span>
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="moon"></i></span>
                     <span>Dark Mode</span>
                     <label class="switch">
                         <input type="checkbox" id="theme-checkbox">
                         <span class="slider round"></span>
                     </label>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="volume-2"></i></span>
+                    <span>Read Aloud</span>
+                    <button id="speaker-toggle" class="icon-btn-small" title="Read Aloud Content">
+                        <i data-lucide="volume-2"></i>
+                    </button>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon" aria-hidden="true"><i data-lucide="accessibility"></i></span>
+                    <span>High Contrast</span>
+                    <button id="acc-toggle" class="icon-btn-small" title="Toggle Accessibility Mode">
+                        <i data-lucide="eye"></i>
+                    </button>
                 </div>
             </nav>
         </aside>
@@ -230,14 +259,16 @@
                     </div>
                     <div class="mode-toggle-group">
                         <span class="mode-label">ACCESSIBLE</span>
-                        <button id="acc-toggle-header" class="icon-btn" title="Toggle Accessibility Mode">♿</button>
+                        <button id="acc-toggle-header" class="icon-btn" title="Toggle Accessibility Mode">
+                            <i data-lucide="accessibility"></i>
+                        </button>
                     </div>
                     <div class="mode-toggle-group">
                         <span class="mode-label">SPEAKER</span>
-                        <button id="speaker-toggle" class="icon-btn" title="Read Aloud Content">🔊</button>
+                        <button id="speaker-toggle" class="icon-btn" title="Read Aloud Content"><i data-lucide="volume-2"></i></button>
                     </div>
                     <div id="live-indicator" class="badge badge-region">
-                        <span class="pulse-dot"></span> LIVE UPDATES
+                        <span class="pulse-dot"></span> <span aria-hidden="true">LIVE UPDATES</span>
                     </div>
                 </div>
             </header>
@@ -247,7 +278,7 @@
             <!-- Tab Panels -->
             <section id="tab-assistant" class="tab-panel active">
                 <div class="chat-container">
-                    <div id="chat-messages" class="chat-messages">
+                    <div id="chat-messages" class="chat-messages" aria-live="polite" aria-atomic="false">
                         <!-- Welcome message will be injected here -->
                     </div>
                     <div id="typing-indicator" class="typing-indicator hidden">
@@ -255,11 +286,11 @@
                     </div>
                     <div class="suggestion-chips" id="suggestion-chips"></div>
                     <div class="chat-input-area">
-                        <button id="clear-chat" class="icon-btn" title="Clear Chat">🗑️</button>
+                        <button id="clear-chat" class="icon-btn" title="Clear Chat"><i data-lucide="trash-2"></i></button>
                         <input type="text" id="chat-input" placeholder="Ask a question..." data-i18n-placeholder="askQuestion">
-                        <button id="mic-btn" class="icon-btn" title="Voice Input">🎤</button>
-                        <button id="save-chat" class="icon-btn" title="Save Chat">💾</button>
-                        <button id="send-btn" class="btn-primary" data-i18n="sendBtn">Send</button>
+                        <button id="mic-btn" class="icon-btn" title="Voice Input"><i data-lucide="mic"></i></button>
+                        <button id="save-chat" class="icon-btn" title="Save Chat"><i data-lucide="download"></i></button>
+                        <button id="send-btn" class="btn-primary" data-i18n="sendBtn">Send <i data-lucide="send"></i></button>
                     </div>
                 </div>
             </section>
@@ -291,26 +322,26 @@
                     <p id="mastered-count">0 of 25 mastered</p>
                 </div>
                 <div class="flashcard-deck">
-                    <div class="flashcard" id="flashcard" onclick="flipCard()">
+                    <button class="flashcard" id="flashcard" onclick="flipCard()" aria-label="Flashcard, click to flip">
                         <div class="card-inner">
                             <div class="card-front">
                                 <span class="card-category" id="card-cat">Category</span>
                                 <h3 id="card-term">Term</h3>
-                                <p class="flip-hint">Click to flip 🔄</p>
+                                <p class="flip-hint">Click or press Enter to flip <i data-lucide="refresh-cw"></i></p>
                             </div>
                             <div class="card-back">
                                 <h3>Definition</h3>
                                 <p id="card-def">Explanation goes here...</p>
-                                <p class="flip-hint">Click to flip back 🔄</p>
+                                <p class="flip-hint">Click or press Enter to flip back <i data-lucide="refresh-cw"></i></p>
                             </div>
                         </div>
-                    </div>
+                    </button>
                     <div class="card-controls">
-                        <button onclick="prevCard()" class="btn-secondary">⬅️ Previous</button>
-                        <button onclick="gotIt()" class="btn-accent">Got It! ✅</button>
-                        <button onclick="reviewAgain()" class="btn-secondary">Review Again 🔄</button>
-                        <button onclick="nextCard()" class="btn-secondary">Next ➡️</button>
-                        <button onclick="shuffleDeck()" class="btn-secondary">🔀 Shuffle</button>
+                        <button onclick="prevCard()" class="btn-secondary"><i data-lucide="chevron-left"></i> Previous</button>
+                        <button onclick="gotIt()" class="btn-accent">Got It! <i data-lucide="check-circle"></i></button>
+                        <button onclick="reviewAgain()" class="btn-secondary">Review Again <i data-lucide="refresh-cw"></i></button>
+                        <button onclick="nextCard()" class="btn-secondary">Next <i data-lucide="chevron-right"></i></button>
+                        <button onclick="shuffleDeck()" class="btn-secondary"><i data-lucide="shuffle"></i> Shuffle</button>
                     </div>
                 </div>
             </section>
@@ -337,10 +368,10 @@
                     <!-- Step 1 -->
                     <div id="elig-step-1" class="elig-card">
                         <div class="step-num">1</div>
-                        <h3>Are you a citizen of India?</h3>
+                        <h3>Are you a citizen of India? <i data-lucide="flag" style="color:var(--accent)"></i></h3>
                         <div class="elig-actions">
-                            <button class="btn-primary" onclick="eligNext(2)">Yes, I am 🇮🇳</button>
-                            <button class="btn-secondary" onclick="eligResult('not-citizen')">No</button>
+                            <button class="btn-primary" onclick="eligNext(2)">Yes, I am <i data-lucide="check"></i></button>
+                            <button class="btn-secondary" onclick="eligResult('not-citizen')">No <i data-lucide="x"></i></button>
                         </div>
                     </div>
                     <!-- Step 2 -->
@@ -352,7 +383,7 @@
                             <div class="age-display"><span id="age-val">18</span> years old</div>
                         </div>
                         <div class="elig-actions">
-                            <button class="btn-primary" onclick="checkAge()">Next Step →</button>
+                            <button class="btn-primary" onclick="checkAge()">Next Step <i data-lucide="arrow-right"></i></button>
                         </div>
                     </div>
                     <!-- Step 3 -->
@@ -366,8 +397,8 @@
                         </div>
                     </div>
                     <!-- Result -->
-                    <div id="elig-result" class="elig-card result-card hidden">
-                        <div id="result-icon" class="result-icon">✅</div>
+                    <div id="elig-result" class="elig-card result-card hidden" aria-live="assertive">
+                        <div id="result-icon" class="result-icon" aria-hidden="true">✅</div>
                         <h3 id="result-title">You are Eligible!</h3>
                         <p id="result-desc">Based on your answers, you are ready to vote.</p>
                         <div id="result-docs" class="result-docs">
@@ -378,7 +409,7 @@
                                 <li>OR MNREGA Job Card</li>
                             </ul>
                         </div>
-                        <button class="btn-primary" onclick="resetElig()">Start Over 🔄</button>
+                        <button class="btn-primary" onclick="resetElig()">Start Over <i data-lucide="refresh-cw"></i></button>
                     </div>
                 </div>
             </section>
@@ -449,8 +480,9 @@
     </div>
 
     <!-- Scripts -->
+    <script type="module" src="js/factory.js"></script>
     <script type="module" src="i18n.js"></script>
-    <script type="module" src="gemini.js"></script>
+    <script type="module" src="chatbot.js"></script>
     <script type="module" src="timeline.js"></script>
     <script type="module" src="flashcards.js"></script>
     <script type="module" src="quiz.js"></script>

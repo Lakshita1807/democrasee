@@ -65,8 +65,8 @@ app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; " +
-    "script-src 'self'; " +
-    "connect-src 'self' https://generativelanguage.googleapis.com https://api.anthropic.com; " +
+    "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.googletagmanager.com https://unpkg.com; " +
+    "connect-src 'self' https://generativelanguage.googleapis.com https://api.anthropic.com https://translation.googleapis.com https://www.google-analytics.com https://*.firebaseio.com https://*.googleapis.com; " +
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "font-src 'self' https://fonts.gstatic.com; " +
     "frame-ancestors 'none';"
@@ -78,6 +78,26 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // 6. ROUTES
+app.post('/api/translate', async (req, res) => {
+  const { text, target } = req.body;
+  const API_KEY = process.env.GEMINI_API_KEY; // Reusing same key if it has Translation API enabled
+  const URL = `https://translation.googleapis.com/language/translate/v2?key=${API_KEY}`;
+
+  try {
+    const response = await fetch(URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ q: text, target })
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Translation error:", error);
+    res.status(500).json({ error: "Translation failed" });
+  }
+});
+
 app.post('/api/chat', aiLimiter, async (req, res) => {
   const { prompt, apiKey } = req.body;
   const finalKey = apiKey || process.env.GEMINI_API_KEY;
@@ -103,6 +123,36 @@ app.post('/api/chat', aiLimiter, async (req, res) => {
     console.error("Server API error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
+});
+
+// 7. SSE LIVE UPDATES
+app.get('/api/live-updates', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const sendUpdate = (data) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
+  // Initial update
+  sendUpdate({ type: 'STATUS', message: 'Connected to live election updates' });
+
+  // Periodic mock updates
+  const interval = setInterval(() => {
+    const turnouts = ["66.3%", "67.1%", "65.8%", "68.2%"];
+    sendUpdate({ 
+      type: 'TURNOUT_UPDATE', 
+      value: turnouts[Math.floor(Math.random() * turnouts.length)],
+      timestamp: new Date().toLocaleTimeString()
+    });
+  }, 30000);
+
+  req.on('close', () => {
+    clearInterval(interval);
+    res.end();
+  });
 });
 
 app.get('*', (req, res) => {

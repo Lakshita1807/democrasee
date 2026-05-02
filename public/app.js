@@ -1,4 +1,25 @@
+/**
+ * Main application initialization
+ */
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Lucide Icons
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+
+    // Ticker Optimization: Clone content for infinite loop
+    const tickerMove = document.querySelector('.ticker-move');
+    if (tickerMove) {
+        const clone = tickerMove.innerHTML;
+        tickerMove.innerHTML += clone;
+    }
+
+    // SSE Live Updates
+    initLiveUpdates();
+
+    // Lazy Loading Observer
+    initLazyLoading();
+
     // Check if onboarding is needed
     const savedRegion = localStorage.getItem('userRegion');
     const savedRole = localStorage.getItem('userRole');
@@ -62,25 +83,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Theme Toggle
-    const themeBtn = document.getElementById('theme-toggle');
     const themeCheckbox = document.getElementById('theme-checkbox');
     
+    /**
+     * Applies theme to the document
+     * @param {string} theme - 'light' or 'dark'
+     */
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
         const headerThemeCheckbox = document.getElementById('theme-checkbox-header');
-        if (themeBtn) themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
         if (themeCheckbox) themeCheckbox.checked = theme === 'dark';
         if (headerThemeCheckbox) headerThemeCheckbox.checked = theme === 'dark';
     }
 
     const savedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(savedTheme);
-
-    themeBtn?.addEventListener('click', () => {
-        const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        applyTheme(newTheme);
-    });
 
     themeCheckbox?.addEventListener('change', (e) => {
         applyTheme(e.target.checked ? 'dark' : 'light');
@@ -95,6 +113,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const accBtn = document.getElementById('acc-toggle');
     const headerAccBtn = document.getElementById('acc-toggle-header');
     
+    /**
+     * Toggles accessibility mode
+     */
     function toggleAccessibility() {
         const active = document.body.classList.toggle('accessibility-mode');
         localStorage.setItem('accessibilityMode', active);
@@ -120,41 +141,171 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Initial Dashboard Update
-    updateDashboard();
+    // Initial Dashboard Update & Progress Sync
+    loadUserProgress().then(progress => {
+        if (progress) {
+            if (progress.userRegion) localStorage.setItem('userRegion', progress.userRegion);
+            if (progress.userRole) localStorage.setItem('userRole', progress.userRole);
+            if (progress.quizBestScore) localStorage.setItem('quizBestScore', progress.quizBestScore);
+            if (progress.masteredFlashcards) localStorage.setItem('masteredFlashcards', JSON.stringify(progress.masteredFlashcards));
+            
+            if (progress.userRegion && progress.userRole) {
+                showApp(progress.userRegion, progress.userRole);
+            }
+        }
+        updateDashboard(false); // Don't sync back immediately on load
+    });
+
+    // Pause/stop the ticker animation off-screen
+    const ticker = document.querySelector('.ticker-move');
+    if (ticker) {
+        document.addEventListener('visibilitychange', () => {
+            ticker.style.animationPlayState = document.hidden ? 'paused' : 'running';
+        });
+    }
 });
 
-function updateDashboard() {
+/**
+ * Global Caching Utility with TTL
+ * @param {string} key 
+ * @param {Function} fetchFn 
+ * @param {number} ttlMs 
+ * @returns {Promise<any>}
+ */
+export function getCached(key, fetchFn, ttlMs = 86400000) {
+    const cached = JSON.parse(localStorage.getItem(key) || 'null');
+    if (cached && Date.now() - cached.ts < ttlMs) return Promise.resolve(cached.data);
+    return fetchFn().then(data => {
+        localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() }));
+        return data;
+    });
+}
+window.getCached = getCached;
+
+/**
+ * Initializes SSE for live election updates
+ */
+function initLiveUpdates() {
+    const liveIndicator = document.getElementById('live-indicator');
+    if (!liveIndicator) return;
+
+    const es = new EventSource('/api/live-updates');
+    
+    es.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'TURNOUT_UPDATE') {
+            const ticker = document.querySelector('.ticker-move');
+            if (ticker) {
+                // Update turnout info dynamically if possible, or just log
+                console.log("Live Turnout Update:", data.value);
+            }
+        }
+    };
+
+    es.onerror = () => {
+        console.warn("SSE connection lost. Reconnecting...");
+        es.close();
+    };
+}
+
+/**
+ * Initializes Lazy Loading for major sections
+ */
+function initLazyLoading() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const tab = entry.target.id.replace('tab-', '');
+                initTab(tab);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.tab-panel').forEach(section => observer.observe(section));
+}
+
+/**
+ * Updates the user dashboard stats
+ * @param {boolean} syncToCloud - Whether to save to Firestore
+ */
+function updateDashboard(syncToCloud = true) {
     const flashcards = JSON.parse(localStorage.getItem('masteredFlashcards') || '[]');
     const quizScore = localStorage.getItem('quizBestScore') || '0';
     const questions = localStorage.getItem('stats_questions') || '0';
+    const region = localStorage.getItem('userRegion');
+    const role = localStorage.getItem('userRole');
     
-    // Calculate Days Active
-    const firstVisit = localStorage.getItem('firstVisitDate') || new Date().toISOString();
-    if (!localStorage.getItem('firstVisitDate')) localStorage.setItem('firstVisitDate', firstVisit);
-    const diff = Math.floor((new Date() - new Date(firstVisit)) / (1000 * 60 * 60 * 24)) + 1;
+    const statFlash = document.getElementById('stat-flashcards');
+    const statQuiz = document.getElementById('stat-quiz');
+    const statQues = document.getElementById('stat-questions');
 
-    document.getElementById('stat-flashcards').textContent = `${flashcards.length}/25`;
-    document.getElementById('stat-quiz').textContent = `${quizScore}/10`;
-    document.getElementById('stat-questions').textContent = questions;
+    if (statFlash) statFlash.textContent = `${flashcards.length}/25`;
+    if (statQuiz) statQuiz.textContent = `${quizScore}/10`;
+    if (statQues) statQues.textContent = questions;
+
+    if (syncToCloud && window.saveUserProgress) {
+        window.saveUserProgress({
+            masteredFlashcards: flashcards,
+            quizBestScore: quizScore,
+            stats_questions: questions,
+            userRegion: region,
+            userRole: role
+        });
+    }
 }
 window.updateDashboard = updateDashboard;
 
+/**
+ * Transition from onboarding to main app
+ * @param {string} region 
+ * @param {string} role 
+ */
 function showApp(region, role) {
-    document.getElementById('onboarding-modal').classList.add('hidden');
-    document.getElementById('main-app').classList.remove('hidden');
+    const modal = document.getElementById('onboarding-modal');
+    const main = document.getElementById('main-app');
     
+    if (modal) modal.classList.add('hidden');
+    if (main) main.classList.remove('hidden');
+    
+    // GA4 Tracking
+    if (window.gtag) {
+        gtag('event', 'select_content', {
+            'content_type': 'state_selection',
+            'item_id': region
+        });
+        gtag('event', 'user_role_assignment', {
+            'role': role
+        });
+    }
+
     updateBadges(region, role);
     initTab('assistant');
 }
 
+/**
+ * Updates sidebar badges with user info
+ * @param {string} region 
+ * @param {string} role 
+ */
 function updateBadges(region, role) {
-    document.getElementById('region-badge').textContent = `📍 ${region}`;
-    document.getElementById('role-badge').textContent = `👤 ${role}`;
+    const regionBadge = document.getElementById('region-badge');
+    const roleBadge = document.getElementById('role-badge');
+    
+    if (regionBadge) regionBadge.innerHTML = `<i data-lucide="map-pin"></i> ${region}`;
+    if (roleBadge) roleBadge.innerHTML = `<i data-lucide="user"></i> ${role}`;
+    
+    if (window.lucide) lucide.createIcons();
 }
 
+/**
+ * Lazy loads and initializes a tab panel
+ * @param {string} tab 
+ */
 function initTab(tab) {
     const container = document.getElementById(`tab-${tab}`);
+    if (container && container.getAttribute('data-loaded') === 'true') return;
+
     try {
         if (tab === 'assistant') initChat();
         if (tab === 'timeline') renderTimeline();
@@ -167,6 +318,10 @@ function initTab(tab) {
         if (tab === 'helpline') initHelpline();
         if (tab === 'voter-id') initVoterID();
         if (tab === 'parties') initParties();
+        
+        if (container) container.setAttribute('data-loaded', 'true');
+        if (window.lucide) lucide.createIcons();
+        
     } catch (error) {
         console.error(`Error loading tab ${tab}:`, error);
         if (container) {
