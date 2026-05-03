@@ -44,7 +44,6 @@ app.use(helmet({
     includeSubDomains: true, 
     preload: false 
   },
-  frameguard: { action: 'deny' },
 }));
 
 
