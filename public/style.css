@@ -1368,3 +1368,4 @@ i[data-lucide] {
     display: flex;
     align-items: center;
 }
+.honeypot { opacity: 0; position: absolute; left: -9999px; pointer-events: none; }

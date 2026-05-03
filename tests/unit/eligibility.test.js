@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkEligibility } from '../../public/eligibility.js';
+import { checkEligibility } from '../../public/js/hardened.js';
 
 describe('Eligibility Checker', () => {
     it('should return NOT eligible for 17-year-old Indian citizen', () => {
