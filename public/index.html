@@ -15,13 +15,13 @@
     <link rel="stylesheet" href="style.css">
     
     <!-- External Dependencies -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest" nonce="{{CSP_NONCE}}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js" nonce="{{CSP_NONCE}}"></script>
     
     <!-- Firebase SDKs (Required for migration only) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js" nonce="{{CSP_NONCE}}"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js" nonce="{{CSP_NONCE}}"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js" nonce="{{CSP_NONCE}}"></script>
 
     <style>
         /* Audit Additions */
@@ -504,7 +504,7 @@
          */
 
         const CONFIG = {
-            AI_PROXY: '/api/ai',
+            AI_PROXY: '/chat-endpoint',
             NEWS_PROXY: '/api/news',
             CACHE_TTL: 15,
             CHAT_LIMIT: 20,
@@ -562,6 +562,17 @@
             }
         }
 
+        window.getCached = async (key, fetcher) => {
+            const cached = localStorage.getItem(key);
+            if (cached) {
+                const { data, timestamp } = JSON.parse(cached);
+                if (Date.now() - timestamp < CONFIG.CACHE_TTL * 60 * 1000) return data;
+            }
+            const data = await fetcher();
+            localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+            return data;
+        };
+
         // --- AI & Chat Logic ---
         let chatCount = 0;
         let chatThrottled = false;
@@ -602,7 +613,9 @@
 
                 if (!res.ok) throw new Error('AI_FAILED');
 
-                const responseText = data.candidates[0].content.parts[0].text;
+                const responseText = data.candidates && data.candidates[0] && data.candidates[0].content 
+                                    ? data.candidates[0].content.parts[0].text 
+                                    : "I'm sorry, I couldn't process that.";
                 const sanitized = DOMPurify.sanitize(responseText);
                 appendMessage('ai', sanitized);
                 
@@ -610,7 +623,7 @@
                 AppState.save();
             } catch (err) {
                 indicator.classList.add('hidden');
-                appendMessage('ai', '<div class="error-state">Something went wrong. Please try again.</div>');
+                appendMessage('ai', '<div class="error-state">Service is currently unavailable. Please try again later.</div>');
             }
         }
 
@@ -686,6 +699,29 @@
             AppState.load();
             runMigration();
 
+            // Onboarding
+            document.getElementById('get-started-btn').addEventListener('click', () => {
+                const state = document.getElementById('state-select').value;
+                const role = document.getElementById('role-select').value;
+                localStorage.setItem('userRegion', state);
+                localStorage.setItem('userRole', role);
+                const regionBadge = document.getElementById('region-badge');
+                const roleBadge = document.getElementById('role-badge');
+                if (regionBadge) regionBadge.innerHTML = `<i data-lucide="map-pin"></i> ${state}`;
+                if (roleBadge) roleBadge.innerHTML = `<i data-lucide="user"></i> ${role}`;
+                document.getElementById('onboarding-modal').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                lucide.createIcons();
+            });
+
+            document.querySelectorAll('#onboarding-lang-toggle .lang-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#onboarding-lang-toggle .lang-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    // Language switching logic can be added here
+                });
+            });
+
             // Navigation
             document.querySelectorAll('[data-tab]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -698,6 +734,11 @@
 
                     if (tab === 'flashcards') loadFlashcards(true);
                     if (tab === 'parties') loadParties();
+                    if (tab === 'timeline') loadTimeline();
+                    if (tab === 'news') loadNews();
+                    if (tab === 'charts' && window.initCharts) window.initCharts();
+                    if (tab === 'helpline' && window.initHelpline) window.initHelpline();
+                    if (tab === 'voter-id' && window.initVoterID) window.initVoterID();
                 });
             });
 
@@ -779,6 +820,51 @@
             applyTheme(savedTheme);
             document.getElementById('theme-checkbox').addEventListener('change', (e) => applyTheme(e.target.checked));
             document.getElementById('theme-checkbox-header').addEventListener('change', (e) => applyTheme(e.target.checked));
+            
+            // Accessibility Management
+            const applyAccessibility = (active) => {
+                document.body.classList.toggle('accessibility-mode', active);
+                localStorage.setItem('accessibility', active ? 'true' : 'false');
+                const btns = [document.getElementById('acc-toggle'), document.getElementById('acc-toggle-header')];
+                btns.forEach(b => { if (b) b.classList.toggle('active', active); });
+            };
+            const savedAccess = localStorage.getItem('accessibility') === 'true';
+            applyAccessibility(savedAccess);
+            [document.getElementById('acc-toggle'), document.getElementById('acc-toggle-header')].forEach(btn => {
+                if (btn) btn.addEventListener('click', () => {
+                    const isActive = document.body.classList.contains('accessibility-mode');
+                    applyAccessibility(!isActive);
+                });
+            });
+
+            // Timeline Delegation
+            const timelineContainer = document.getElementById('timeline-container');
+            if (timelineContainer) {
+                timelineContainer.addEventListener('click', (e) => {
+                    const toggleBtn = e.target.closest('[data-toggle-phase]');
+                    if (toggleBtn) {
+                        const id = toggleBtn.dataset.togglePhase;
+                        const detail = document.getElementById('detail-' + id);
+                        if (detail) {
+                            const isHidden = detail.style.display === 'none';
+                            detail.style.display = isHidden ? 'block' : 'none';
+                            toggleBtn.setAttribute('aria-expanded', isHidden);
+                        }
+                    }
+
+                    const askBtn = e.target.closest('[data-ask-ai]');
+                    if (askBtn) {
+                        const title = askBtn.dataset.askAi;
+                        const navAssistant = document.querySelector('[data-tab="assistant"]');
+                        if (navAssistant) navAssistant.click();
+                        const input = document.getElementById('chat-input');
+                        if (input) {
+                            input.value = `Tell me more about ${title} of the Indian elections.`;
+                            handleSendMessage();
+                        }
+                    }
+                });
+            }
 
             // Load initial limited data
             loadFlashcards(false);
@@ -811,6 +897,77 @@
                 `).join('');
             } catch (err) {}
         }
+
+        async function loadTimeline() {
+            const container = document.getElementById('timeline-container');
+            if (!container || container.children.length > 0) return;
+            
+            try {
+                const PHASES = await cachedFetch('timeline_data', 'data/timeline.json');
+                const completed = PHASES.filter(p => p.status === 'completed').length;
+                
+                const progFill = document.getElementById('timeline-progress');
+                const progText = document.getElementById('timeline-progress-text');
+                if (progFill) progFill.style.width = (completed / PHASES.length * 100) + '%';
+                if (progText) progText.textContent = `${completed} of ${PHASES.length} phases complete`;
+
+                container.innerHTML = PHASES.map(phase => `
+                    <div class="phase-card ${phase.status}">
+                        <div class="phase-icon" aria-hidden="true"><i data-lucide="${phase.icon}"></i></div>
+                        <div class="phase-content">
+                            <button class="phase-header-btn" data-toggle-phase="${phase.id}" aria-expanded="false" aria-controls="detail-${phase.id}">
+                                <div class="phase-header-text">
+                                    <h3>${phase.title}</h3>
+                                    <span class="phase-date"><i data-lucide="calendar"></i> ${phase.date}</span>
+                                </div>
+                                <span class="phase-status ${phase.status}">
+                                    ${phase.status === 'completed' ? '<i data-lucide="check-circle"></i>' : 
+                                      phase.status === 'current' ? '<i data-lucide="refresh-cw"></i> Current' : '<i data-lucide="clock"></i>'}
+                                </span>
+                            </button>
+                            <p class="phase-short">${phase.short}</p>
+                            <div class="phase-detail" id="detail-${phase.id}" style="display:none">
+                                <p>${phase.detail}</p>
+                                <button class="ask-ai-btn" data-ask-ai="${phase.title}">
+                                    Ask AI about this <i data-lucide="bot"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+            } catch (err) {}
+        }
+
+        async function loadNews() {
+            const container = document.getElementById('news-container');
+            if (!container || container.children.length > 0) return;
+            
+            try {
+                const news = await cachedFetch('news_data', '/api/news');
+                container.innerHTML = news.map(item => `
+                    <div class="news-card animated-card">
+                        <div class="news-meta">
+                            <span class="news-category">${item.category}</span>
+                            <span class="news-date">${item.date}</span>
+                        </div>
+                        <h3>${item.title}</h3>
+                        <p>${item.summary}</p>
+                        <a href="${item.link}" target="_blank" class="news-link">
+                            Read More <i data-lucide="external-link" style="width:14px;height:14px"></i>
+                        </a>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+            } catch (err) {
+                container.innerHTML = '<p class="error-msg">Failed to load news. Please try again later.</p>';
+            }
+        }
+
+
     </script>
+    <script src="helpline.js" type="module" nonce="{{CSP_NONCE}}"></script>
+    <script src="voterid.js" type="module" nonce="{{CSP_NONCE}}"></script>
+    <script src="charts.js" type="module" nonce="{{CSP_NONCE}}"></script>
 </body>
 </html>

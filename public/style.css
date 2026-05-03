@@ -1298,6 +1298,22 @@ i[data-lucide] {
     border-width: 3px;
     border-color: #000;
 }
+
+/* Chart Styles */
+.chart-wrapper {
+    background: var(--white);
+    padding: 32px;
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+}
+.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.mock-chart { display: flex; flex-direction: column; gap: 16px; }
+.bar-row { display: flex; align-items: center; gap: 16px; }
+.party-label { width: 40px; font-weight: 700; font-size: 14px; }
+.bar-container { flex: 1; height: 32px; background: var(--bg); border-radius: 16px; position: relative; overflow: hidden; display: flex; align-items: center; }
+.bar { height: 100%; border-radius: 16px; transition: width 1s ease-out; }
+.count { position: absolute; right: 12px; font-weight: 700; font-size: 12px; color: var(--text); }
+.chart-source { margin-top: 24px; font-size: 12px; color: var(--text-muted); text-align: center; }
 .accessibility-mode .party-symbol-container {
     background: #f0f0f0;
 }

@@ -6,18 +6,29 @@
  * Initializes charts module
  */
 export function initCharts() {
+  const setup = () => {
+    const btns = document.querySelectorAll('.chart-tab-btn');
+    if (btns.length > 0 && !btns[0].dataset.listener) {
+      btns.forEach(btn => {
+        btn.dataset.listener = "true";
+        btn.addEventListener('click', (e) => {
+          showChart(e.target.dataset.chart);
+        });
+      });
+    }
+    showChart('seats');
+  };
+
   if (typeof google === 'undefined' || typeof google.charts === 'undefined') {
     const script = document.createElement('script');
     script.src = 'https://www.gstatic.com/charts/loader.js';
     script.onload = () => {
-      google.charts.load('current', {packages:['corechart']});
-      google.charts.setOnLoadCallback(() => {
-        showChart('seats');
-      });
+      google.charts.load('current', { packages: ['corechart'] });
+      google.charts.setOnLoadCallback(setup);
     };
     document.head.appendChild(script);
   } else {
-    showChart('seats');
+    setup();
   }
 }
 

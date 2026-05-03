@@ -2,6 +2,13 @@ import { test, expect } from '@playwright/test';
 
 test.describe('DemocraSee Hardening E2E', () => {
     test.beforeEach(async ({ page }) => {
+        // Monitor for CSP violations in the console
+        page.on('console', msg => {
+            if (msg.type() === 'error' && msg.text().includes('CSP')) {
+                throw new Error(`CSP Violation detected: ${msg.text()}`);
+            }
+        });
+
         await page.goto('/');
         const startBtn = page.locator('#get-started-btn');
         if (await startBtn.isVisible()) {
@@ -10,7 +17,7 @@ test.describe('DemocraSee Hardening E2E', () => {
     });
 
     test('should have a strict CSP header with dynamic nonce', async ({ page }) => {
-        const response = await page.goto('/');
+        const response = await page.reload();
         const csp = response.headers()['content-security-policy'];
         expect(csp).toBeDefined();
         
@@ -20,12 +27,13 @@ test.describe('DemocraSee Hardening E2E', () => {
         const nonce = nonceMatch[1];
         
         // Verify the inline script tag in the DOM has the SAME nonce
-        const scriptNonce = await page.locator('script[nonce]').getAttribute('nonce');
-        // Note: Some browsers hide the nonce attribute in the DOM for security, 
-        // but it should match the property.
-        const scriptNonceProperty = await page.evaluate(() => document.querySelector('script[nonce]').nonce);
+        const scriptNonceProperty = await page.evaluate(() => {
+            const script = document.querySelector('script[nonce]');
+            return script ? script.nonce : null;
+        });
         expect(scriptNonceProperty).toBe(nonce);
         
+        // Verify no unsafe-inline in script-src
         const scriptSrc = csp.split(';').find(s => s.trim().startsWith('script-src'));
         expect(scriptSrc).not.toContain("'unsafe-inline'");
     });
