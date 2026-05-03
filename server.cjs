@@ -27,11 +27,27 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: [
+        "'self'", 
+        "'unsafe-inline'", 
+        "https://www.gstatic.com", 
+        "https://unpkg.com",
+        "https://www.googletagmanager.com",
+        "https://www.google-analytics.com",
+        "https://translate.google.com",
+        "https://translate.googleapis.com"
+      ],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["https://fonts.gstatic.com"],
-      connectSrc: ["'self'", "https://firebaseio.com", "https://identitytoolkit.googleapis.com"],
-      imgSrc: ["'self'", "data:"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      connectSrc: [
+        "'self'", 
+        "https://*.firebaseio.com", 
+        "https://identitytoolkit.googleapis.com",
+        "https://generativelanguage.googleapis.com",
+        "https://www.google-analytics.com",
+        "https://translate.googleapis.com"
+      ],
+      imgSrc: ["'self'", "data:", "https://*.gstatic.com", "https://www.googletagmanager.com"],
       frameAncestors: ["'none'"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
