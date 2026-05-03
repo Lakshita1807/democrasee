@@ -1,12 +1,12 @@
 // Firebase configuration placeholders
 // REPLACE WITH YOUR ACTUAL CONFIG FROM FIREBASE CONSOLE
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyBZmvfC3JUSvIqtEH6k5_ixI--lblQWu4A",
+  authDomain: "prompt2-494814.firebaseapp.com",
+  projectId: "prompt2-494814",
+  storageBucket: "prompt2-494814.appspot.com",
+  messagingSenderId: "142760811225",
+  appId: "1:142760811225:web:democrasee",
   measurementId: "G-DEMOCRASEE"
 };
 

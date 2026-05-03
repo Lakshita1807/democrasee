@@ -18,12 +18,21 @@
     <script src="https://unpkg.com/lucide@latest" nonce="{{CSP_NONCE}}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js" nonce="{{CSP_NONCE}}"></script>
     
-    <!-- Firebase SDKs (Required for migration only) -->
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DEMOCRASEE" nonce="{{CSP_NONCE}}"></script>
+    <script nonce="{{CSP_NONCE}}">
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DEMOCRASEE');
+    </script>
+
+    <!-- Firebase SDKs (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js" nonce="{{CSP_NONCE}}"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js" nonce="{{CSP_NONCE}}"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js" nonce="{{CSP_NONCE}}"></script>
-
-    <style>
+    <script src="firebase-config.js" nonce="{{CSP_NONCE}}"></script>
+    <style nonce="{{CSP_NONCE}}">
         /* Audit Additions */
         .error-state { border: 2px solid var(--error); background: rgba(239, 68, 68, 0.05); padding: 20px; border-radius: 16px; text-align: center; color: var(--error); margin: 20px 0; }
         .error-state button { margin-top: 12px; padding: 8px 16px; background: var(--error); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
@@ -176,7 +185,7 @@
                 </a>
                 <a href="#" class="nav-item" data-tab="news" role="menuitem">
                     <span class="nav-icon" aria-hidden="true"><i data-lucide="newspaper"></i></span>
-                    <span>Current News</span>
+                    <span data-i18n="currentNews">Current News</span>
                 </a>
                 <a href="#" class="nav-item" data-tab="flashcards" role="menuitem">
                     <span class="nav-icon" aria-hidden="true"><i data-lucide="layers"></i></span>
@@ -192,7 +201,7 @@
                 </a>
                 <a href="#" class="nav-item" data-tab="multilingual" role="menuitem">
                     <span class="nav-icon" aria-hidden="true"><i data-lucide="globe"></i></span>
-                    <span>Languages</span>
+                    <span data-i18n="languages">Languages</span>
                 </a>
                 <a href="#" class="nav-item" data-tab="helpline" role="menuitem">
                     <span class="nav-icon" aria-hidden="true"><i data-lucide="phone-call"></i></span>
@@ -462,6 +471,42 @@
 
             <section id="tab-quiz" class="tab-panel">
                 <!-- Quiz content will be injected -->
+            </section>
+
+            <section id="tab-multilingual" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Multilingual Support</h2>
+                    <p>Select your preferred language for DemocraSee</p>
+                </div>
+                <div class="lang-grid" id="lang-grid">
+                    <div class="lang-card" data-lang="EN">
+                        <span class="lang-flag">🇺🇸</span>
+                        <h3>English</h3>
+                        <p>Standard</p>
+                    </div>
+                    <div class="lang-card" data-lang="HI">
+                        <span class="lang-flag">🇮🇳</span>
+                        <h3>Hindi</h3>
+                        <p>Native</p>
+                    </div>
+                    <div class="lang-card" data-lang="TA">
+                        <span class="lang-flag">🇮🇳</span>
+                        <h3>Tamil</h3>
+                        <p>Native</p>
+                    </div>
+                    <div class="lang-card" data-lang="BN">
+                        <span class="lang-flag">🇮🇳</span>
+                        <h3>Bengali</h3>
+                        <p>Native</p>
+                    </div>
+                    <!-- Dynamic cards will be injected here -->
+                </div>
+                
+                <div class="panel-header" style="margin-top: 40px;">
+                    <h3>External Translation</h3>
+                    <p>Use Google's automated widget if you prefer</p>
+                </div>
+                <div id="google_translate_element"></div>
             </section>
 
             <section id="tab-helpline" class="tab-panel">
@@ -778,6 +823,17 @@
                 document.getElementById('elig-step-1').classList.add('hidden');
                 document.getElementById('elig-step-2').classList.remove('hidden');
             });
+
+            // "No" on citizenship → show ineligible result immediately
+            document.getElementById('elig-citizen-no').addEventListener('click', () => {
+                document.getElementById('elig-step-1').classList.add('hidden');
+                const resCard = document.getElementById('elig-result');
+                resCard.classList.remove('hidden');
+                document.getElementById('result-title').textContent = 'Not Eligible';
+                document.getElementById('result-desc').textContent = 'Only citizens of India are eligible to vote in Indian elections.';
+                document.getElementById('result-docs').classList.add('hidden');
+            });
+
             document.getElementById('age-slider').addEventListener('input', (e) => {
                 document.getElementById('age-val').textContent = e.target.value;
             });
@@ -785,6 +841,16 @@
                 const age = parseInt(document.getElementById('age-slider').value);
                 if (age < 1 || age > 120) {
                     alert('Please enter a valid age between 1 and 120.');
+                    return;
+                }
+                if (age < 18) {
+                    // Under-18 path — show ineligible result
+                    document.getElementById('elig-step-2').classList.add('hidden');
+                    const resCard = document.getElementById('elig-result');
+                    resCard.classList.remove('hidden');
+                    document.getElementById('result-title').textContent = 'Not Eligible Yet';
+                    document.getElementById('result-desc').textContent = 'You must be at least 18 years old to vote in India.';
+                    document.getElementById('result-docs').classList.add('hidden');
                     return;
                 }
                 document.getElementById('elig-step-2').classList.add('hidden');
@@ -796,9 +862,25 @@
                     document.getElementById('elig-step-3').classList.add('hidden');
                     const resCard = document.getElementById('elig-result');
                     resCard.classList.remove('hidden');
+                    document.getElementById('result-docs').classList.remove('hidden');
                     // Simple logic for audit demo
                     document.getElementById('result-title').textContent = res === 'unsure' ? 'Check your status' : 'You are Eligible!';
                 });
+            });
+
+            // "Start Over" — reset wizard to step 1
+            document.getElementById('elig-reset-btn').addEventListener('click', () => {
+                // Hide result and all steps
+                document.getElementById('elig-result').classList.add('hidden');
+                document.getElementById('elig-step-2').classList.add('hidden');
+                document.getElementById('elig-step-3').classList.add('hidden');
+                document.getElementById('result-docs').classList.remove('hidden');
+                // Show step 1
+                document.getElementById('elig-step-1').classList.remove('hidden');
+                // Reset slider
+                const slider = document.getElementById('age-slider');
+                slider.value = 18;
+                document.getElementById('age-val').textContent = '18';
             });
 
             // Reset Listener
@@ -966,8 +1048,24 @@
 
 
     </script>
+    <script src="i18n.js" type="module" nonce="{{CSP_NONCE}}"></script>
+    <script src="chatbot.js" type="module" nonce="{{CSP_NONCE}}"></script>
+    <script src="eligibility.js" type="module" nonce="{{CSP_NONCE}}"></script>
+    <script src="flashcards.js" type="module" nonce="{{CSP_NONCE}}"></script>
+    <script src="news.js" type="module" nonce="{{CSP_NONCE}}"></script>
+    <script src="parties.js" type="module" nonce="{{CSP_NONCE}}"></script>
+    <script src="quiz.js" type="module" nonce="{{CSP_NONCE}}"></script>
+    <script src="timeline.js" type="module" nonce="{{CSP_NONCE}}"></script>
     <script src="helpline.js" type="module" nonce="{{CSP_NONCE}}"></script>
     <script src="voterid.js" type="module" nonce="{{CSP_NONCE}}"></script>
     <script src="charts.js" type="module" nonce="{{CSP_NONCE}}"></script>
+    <script src="speaker.js" type="module" nonce="{{CSP_NONCE}}"></script>
+    <script type="text/javascript" nonce="{{CSP_NONCE}}">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({pageLanguage: 'en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" nonce="{{CSP_NONCE}}"></script>
+    <script src="app.js" type="module" nonce="{{CSP_NONCE}}"></script>
 </body>
 </html>

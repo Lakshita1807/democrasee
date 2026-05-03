@@ -9,15 +9,17 @@ let currentUtterance = null;
  * Initializes speaker module
  */
 export function initSpeaker() {
-    const speakerBtn = document.getElementById('speaker-toggle');
-    if (!speakerBtn) return;
-
-    speakerBtn.addEventListener('click', () => {
-        if (isSpeaking) {
-            stopSpeaking();
-        } else {
-            startSpeaking();
-        }
+    const speakerBtns = [document.getElementById('speaker-toggle'), document.getElementById('speaker-toggle-header')];
+    
+    speakerBtns.forEach(btn => {
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+            if (isSpeaking) {
+                stopSpeaking();
+            } else {
+                startSpeaking();
+            }
+        });
     });
 
     // Stop speaking when switching tabs
@@ -94,18 +96,20 @@ export function extractTextFromPanel(panel) {
  * @param {boolean} active 
  */
 export function updateSpeakerUI(active) {
-    const speakerBtn = document.getElementById('speaker-toggle');
-    if (!speakerBtn) return;
-
-    if (active) {
-        speakerBtn.innerHTML = '<i data-lucide="square"></i>';
-        speakerBtn.classList.add('speaking-active');
-        speakerBtn.title = 'Stop Reading';
-    } else {
-        speakerBtn.innerHTML = '<i data-lucide="volume-2"></i>';
-        speakerBtn.classList.remove('speaking-active');
-        speakerBtn.title = 'Read Aloud Content';
-    }
+    const speakerBtns = [document.getElementById('speaker-toggle'), document.getElementById('speaker-toggle-header')];
+    
+    speakerBtns.forEach(btn => {
+        if (!btn) return;
+        if (active) {
+            btn.innerHTML = '<i data-lucide="square"></i>';
+            btn.classList.add('speaking-active');
+            btn.title = 'Stop Reading';
+        } else {
+            btn.innerHTML = '<i data-lucide="volume-2"></i>';
+            btn.classList.remove('speaking-active');
+            btn.title = 'Read Aloud Content';
+        }
+    });
     if (window.lucide) lucide.createIcons();
 }
 

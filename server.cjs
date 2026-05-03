@@ -20,28 +20,73 @@ app.use((req, res, next) => {
   next();
 });
 
+// Consolidate Helmet & CSP
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'", 
+        (req, res) => `'nonce-${res.locals.cspNonce}'`, 
+        "https://cdnjs.cloudflare.com", 
+        "https://www.gstatic.com", 
+        "https://*.gstatic.com",
+        "https://unpkg.com",
+        "https://www.googletagmanager.com",
+        "https://www.google-analytics.com",
+        "https://translate.google.com",
+        "https://translate.googleapis.com"
+      ],
+      styleSrc: [
+        "'self'", 
+        "'unsafe-inline'", 
+        "https://cdnjs.cloudflare.com", 
+        "https://fonts.googleapis.com",
+        "https://www.gstatic.com",
+        "https://*.gstatic.com",
+        "https://translate.googleapis.com"
+      ],
+      fontSrc: [
+        "'self'", 
+        "https://fonts.gstatic.com", 
+        "https://*.gstatic.com",
+        "https://cdnjs.cloudflare.com"
+      ],
+      connectSrc: [
+        "'self'", 
+        "https://generativelanguage.googleapis.com", 
+        "https://newsapi.org", 
+        "https://firestore.googleapis.com", 
+        "https://*.firebaseio.com",
+        "https://www.googleapis.com", 
+        "https://identitytoolkit.googleapis.com", 
+        "https://www.google-analytics.com",
+        "https://translate.googleapis.com"
+      ],
+      imgSrc: [
+        "'self'", 
+        "data:", 
+        "https:", 
+        "https://www.googletagmanager.com", 
+        "https://*.gstatic.com",
+        "https://www.google.com",
+        "https://translate.google.com"
+      ],
+      frameSrc: [
+        "'self'", 
+        "https://*.firebaseapp.com",
+        "https://translate.google.com"
+      ],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'none'"],
+      upgradeInsecureRequests: [],
+    }
+  },
   crossOriginEmbedderPolicy: false,
   hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
   referrerPolicy: { policy: 'no-referrer' },
-}));
-
-app.use(helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`, "https://cdnjs.cloudflare.com", "https://www.gstatic.com", "https://unpkg.com"],
-    styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
-    fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-    connectSrc: ["'self'", "https://generativelanguage.googleapis.com", "https://newsapi.org", "https://firestore.googleapis.com", "https://www.googleapis.com", "https://identitytoolkit.googleapis.com", "https://*.firebaseio.com"],
-    imgSrc: ["'self'", "data:", "https:"],
-    frameSrc: ["'none'"],
-    objectSrc: ["'none'"],
-    baseUri: ["'self'"],
-    formAction: ["'self'"],
-    frameAncestors: ["'none'"],
-    upgradeInsecureRequests: [],
-  }
 }));
 
 // 3. API Routes
@@ -52,11 +97,21 @@ const aiLimiter = rateLimit({
   skip: (req) => req.ip === '::1' || req.ip === '127.0.0.1',
 });
 
-app.post('/chat-endpoint', async (req, res) => {
+app.get('/api/live-updates', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+  const interval = setInterval(() => {
+    res.write(`data: ${JSON.stringify({ type: 'HEARTBEAT', ts: Date.now() })}\n\n`);
+  }, 30000);
+  req.on('close', () => clearInterval(interval));
+});
+
+app.post('/chat-endpoint', aiLimiter, async (req, res) => {
   const { prompt } = req.body;
   const API_KEY = process.env.GEMINI_API_KEY;
   if (!API_KEY) return res.status(500).json({ error: "API Key missing" });
-  
   const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
   try {
     const response = await fetch(URL, {
@@ -68,10 +123,33 @@ app.post('/chat-endpoint', async (req, res) => {
       })
     });
     const data = await response.json();
-    if (!response.ok) return res.status(response.status).json(data);
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.post('/api/translate', async (req, res) => {
+  const { text, target } = req.body;
+  const API_KEY = process.env.GEMINI_API_KEY;
+  const URL = `https://translation.googleapis.com/language/translate/v2?key=${API_KEY}`;
+  
+  try {
+    const response = await fetch(URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ q: text, target })
+    });
+    
+    const data = await response.json();
+    if (data.error) {
+        console.error("Translation API Error:", data.error);
+        return res.status(data.error.code || 500).json({ error: data.error.message });
+    }
+    res.json(data);
+  } catch (error) {
+    console.error("Internal Translation Error:", error);
+    res.status(500).json({ error: "Internal Server Error during translation" });
   }
 });
 
@@ -82,7 +160,7 @@ app.get('/api/news', (req, res) => {
   ]);
 });
 
-// 5. Dynamic Index Helper
+// 4. Dynamic Index Helper
 const serveIndex = (req, res) => {
   const indexPath = path.join(__dirname, 'public', 'index.html');
   fs.readFile(indexPath, 'utf8', (err, data) => {
@@ -91,13 +169,14 @@ const serveIndex = (req, res) => {
   });
 };
 
-// 6. Routes
+// 5. Custom Routes
 app.get('/', serveIndex);
+app.get('/index.html', serveIndex);
 
-// 7. Static Files
+// 6. Static Files (Below custom routes)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 8. Catch-all for SPA
+// 7. Catch-all
 app.get('*', serveIndex);
 
 app.listen(PORT, () => console.log(`Server on ${PORT}`));

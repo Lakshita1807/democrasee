@@ -109,24 +109,81 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(e.target.checked ? 'dark' : 'light');
     });
 
+    // Navigation & Tab Management
+    const navItemsAlt = document.querySelectorAll('.nav-item');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+
+    function switchTab(tabId) {
+        // Deactivate all
+        navItemsAlt.forEach(nav => nav.classList.remove('active'));
+        tabPanels.forEach(panel => panel.classList.remove('active'));
+
+        // Activate target
+        const targetNav = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+        const targetPanel = document.getElementById(`tab-${tabId}`);
+
+        if (targetNav) targetNav.classList.add('active');
+        if (targetPanel) {
+            targetPanel.classList.add('active');
+            initTab(tabId);
+        }
+
+        // Close sidebar on mobile
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar && window.innerWidth <= 768) {
+            sidebar.classList.remove('open');
+        }
+    }
+
+    navItemsAlt.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const tab = item.getAttribute('data-tab');
+            if (tab) {
+                e.preventDefault();
+                switchTab(tab);
+            }
+        });
+    });
+
     // Accessibility Toggle
-    const accBtn = document.getElementById('acc-toggle');
-    const headerAccBtn = document.getElementById('acc-toggle-header');
+    const accBtns = [document.getElementById('acc-toggle'), document.getElementById('acc-toggle-header')];
     
-    /**
-     * Toggles accessibility mode
-     */
-    function toggleAccessibility() {
-        const active = document.body.classList.toggle('accessibility-mode');
-        localStorage.setItem('accessibilityMode', active);
+    function applyAccessibility(isEnabled) {
+        if (isEnabled) {
+            document.documentElement.setAttribute('data-accessibility', 'enabled');
+        } else {
+            document.documentElement.removeAttribute('data-accessibility');
+        }
+        localStorage.setItem('democrasee_acc_v3', isEnabled);
+        
+        accBtns.forEach(btn => {
+            if (btn) {
+                if (isEnabled) {
+                    btn.classList.add('active');
+                    btn.style.background = '#ffff00';
+                    btn.style.color = '#000';
+                } else {
+                    btn.classList.remove('active');
+                    btn.style.background = '';
+                    btn.style.color = '';
+                }
+            }
+        });
+        console.log('Accessibility Mode Set To:', isEnabled);
     }
 
-    if (localStorage.getItem('accessibilityMode') === 'true') {
-        document.body.classList.add('accessibility-mode');
-    }
+    // Initial load - defaults to false unless explicitly true
+    const savedAcc = localStorage.getItem('democrasee_acc_v3');
+    const initialAcc = savedAcc === 'true';
+    applyAccessibility(initialAcc);
 
-    accBtn?.addEventListener('click', toggleAccessibility);
-    headerAccBtn?.addEventListener('click', toggleAccessibility);
+    accBtns.forEach(btn => {
+        btn?.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isNowEnabled = document.documentElement.getAttribute('data-accessibility') !== 'enabled';
+            applyAccessibility(isNowEnabled);
+        });
+    });
 
     // Share Button
     const shareBtn = document.getElementById('share-btn');
@@ -181,6 +238,62 @@ export function getCached(key, fetchFn, ttlMs = 86400000) {
     });
 }
 window.getCached = getCached;
+
+/**
+ * All localStorage keys owned by the DemocraSee app.
+ * Used by resetProgress() and testable in isolation.
+ */
+export const APP_STORAGE_KEYS = [
+    'userRegion',
+    'userRole',
+    'language',
+    'theme',
+    'democrasee_acc_v3',
+    'quizBestScore',
+    'masteredFlashcards',
+    'stats_questions',
+];
+
+/**
+ * Saves current progress snapshot to storage.
+ * @param {{ userRegion?: string, userRole?: string, quizBestScore?: number|string,
+ *           masteredFlashcards?: string[] }} data
+ * @param {Storage} [storage=localStorage]
+ */
+export function saveProgress(data, storage = localStorage) {
+    if (data.userRegion)        storage.setItem('userRegion', data.userRegion);
+    if (data.userRole)          storage.setItem('userRole', data.userRole);
+    if (data.quizBestScore !== undefined)
+                                storage.setItem('quizBestScore', String(data.quizBestScore));
+    if (data.masteredFlashcards)
+                                storage.setItem('masteredFlashcards', JSON.stringify(data.masteredFlashcards));
+}
+
+/**
+ * Loads progress snapshot from storage.
+ * @param {Storage} [storage=localStorage]
+ * @returns {{ userRegion: string|null, userRole: string|null,
+ *             quizBestScore: string|null, masteredFlashcards: string[] }}
+ */
+export function loadProgress(storage = localStorage) {
+    return {
+        userRegion:         storage.getItem('userRegion'),
+        userRole:           storage.getItem('userRole'),
+        quizBestScore:      storage.getItem('quizBestScore'),
+        masteredFlashcards: JSON.parse(storage.getItem('masteredFlashcards') || '[]'),
+    };
+}
+
+/**
+ * Clears all app-owned localStorage keys ("Reset Data").
+ * @param {Storage} [storage=localStorage]
+ */
+export function resetProgress(storage = localStorage) {
+    APP_STORAGE_KEYS.forEach(key => storage.removeItem(key));
+}
+window.resetProgress = resetProgress;
+
+
 
 /**
  * Initializes SSE for live election updates
