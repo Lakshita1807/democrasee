@@ -17,77 +17,36 @@ app.use(express.json());
 // 2. Nonce & Security
 app.use((req, res, next) => {
   res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+  // Set requested Permissions-Policy
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
   next();
 });
 
-// Consolidate Helmet & CSP
+// Consolidate Helmet & CSP per request
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: [
-        "'self'", 
-        (req, res) => `'nonce-${res.locals.cspNonce}'`, 
-        "https://cdnjs.cloudflare.com", 
-        "https://www.gstatic.com", 
-        "https://*.gstatic.com",
-        "https://unpkg.com",
-        "https://www.googletagmanager.com",
-        "https://www.google-analytics.com",
-        "https://translate.google.com",
-        "https://translate.googleapis.com"
-      ],
-      styleSrc: [
-        "'self'", 
-        "'unsafe-inline'", 
-        "https://cdnjs.cloudflare.com", 
-        "https://fonts.googleapis.com",
-        "https://www.gstatic.com",
-        "https://*.gstatic.com",
-        "https://translate.googleapis.com"
-      ],
-      fontSrc: [
-        "'self'", 
-        "https://fonts.gstatic.com", 
-        "https://*.gstatic.com",
-        "https://cdnjs.cloudflare.com"
-      ],
-      connectSrc: [
-        "'self'", 
-        "https://generativelanguage.googleapis.com", 
-        "https://newsapi.org", 
-        "https://firestore.googleapis.com", 
-        "https://*.firebaseio.com",
-        "https://www.googleapis.com", 
-        "https://identitytoolkit.googleapis.com", 
-        "https://www.google-analytics.com",
-        "https://translate.googleapis.com"
-      ],
-      imgSrc: [
-        "'self'", 
-        "data:", 
-        "https:", 
-        "https://www.googletagmanager.com", 
-        "https://*.gstatic.com",
-        "https://www.google.com",
-        "https://translate.google.com"
-      ],
-      frameSrc: [
-        "'self'", 
-        "https://*.firebaseapp.com",
-        "https://translate.google.com"
-      ],
-      objectSrc: ["'none'"],
-      baseUri: ["'self'"],
-      formAction: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["https://fonts.gstatic.com"],
+      connectSrc: ["'self'", "https://firebaseio.com", "https://identitytoolkit.googleapis.com"],
+      imgSrc: ["'self'", "data:"],
       frameAncestors: ["'none'"],
+      objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
     }
   },
-  crossOriginEmbedderPolicy: false,
-  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-  referrerPolicy: { policy: 'no-referrer' },
+  xFrameOptions: { action: 'deny' },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  hsts: { 
+    maxAge: 31536000, 
+    includeSubDomains: true, 
+    preload: false 
+  },
+  frameguard: { action: 'deny' },
 }));
+
 
 // 3. API Routes
 const aiLimiter = rateLimit({
